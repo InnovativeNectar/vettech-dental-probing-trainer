@@ -1,3 +1,12 @@
 export { TrainingSession } from './TrainingSession';
 export { ProbeOverlay } from './ProbeOverlay';
 export { TrainingControls } from './TrainingControls';
+export { LessonFlow } from './LessonFlow';
+export { LessonStep } from './LessonStep';
+export { LessonProgress } from './LessonProgress';
+export { LessonComplete } from './LessonComplete';
+export { ModuleList } from './ModuleList';
+export { ModuleCard } from './ModuleCard';
+export { PracticeMode } from './PracticeMode';
+export { ToothSelector } from './ToothSelector';
+export { DifficultySelector } from './DifficultySelector';
