@@ -9,6 +9,15 @@ if [ -d ".next/standalone" ]; then
   cp -r .next/static .next/standalone/.next/static 2>/dev/null || true
 fi
 
+# Copy better-sqlite3 native module to standalone node_modules
+if [ -d ".next/standalone/node_modules" ]; then
+  mkdir -p .next/standalone/node_modules/better-sqlite3
+  cp -r node_modules/better-sqlite3/* .next/standalone/node_modules/better-sqlite3/ 2>/dev/null || true
+  mkdir -p .next/standalone/node_modules/node-gyp-build
+  cp -r node_modules/node-gyp-build/* .next/standalone/node_modules/node-gyp-build/ 2>/dev/null || true
+  echo "Copied better-sqlite3 native module to standalone."
+fi
+
 # Seed database (creates tables + data if empty, skips if already seeded)
 echo "Seeding database at $DATABASE_URL..."
 npx tsx scripts/seed-db.ts
