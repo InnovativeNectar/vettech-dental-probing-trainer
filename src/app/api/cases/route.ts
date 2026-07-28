@@ -31,8 +31,7 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json(result);
-  } catch (err) {
-    console.error('[api/cases]', err);
-    return NextResponse.json({ error: 'Failed to fetch cases', detail: err instanceof Error ? err.message : String(err) }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: 'Failed to fetch cases' }, { status: 500 });
   }
 }
