@@ -9,13 +9,16 @@ export function getDb(): DrizzleDb | null {
   if (_db !== undefined) return _db;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
-    const Database = require('better-sqlite3').default;
+    let Database = require('better-sqlite3').default ?? require('better-sqlite3');
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
     const { drizzle } = require('drizzle-orm/better-sqlite3');
     const dbPath = process.env.DATABASE_URL || 'dev.db';
+    console.log(`[db] Opening database at: ${dbPath}`);
     const sqlite = new Database(dbPath);
     _db = drizzle(sqlite, { schema });
-  } catch {
+    console.log('[db] Database connected successfully.');
+  } catch (err) {
+    console.error('[db] Failed to connect:', err instanceof Error ? err.message : err);
     _db = null;
   }
   return _db ?? null;
