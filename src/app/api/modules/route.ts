@@ -15,7 +15,8 @@ export async function GET() {
       requiredModules: r.requiredModules ? JSON.parse(r.requiredModules) : [],
     }));
     return NextResponse.json(result);
-  } catch {
-    return NextResponse.json({ error: 'Failed to fetch modules' }, { status: 500 });
+  } catch (err) {
+    console.error('[api/modules]', err);
+    return NextResponse.json({ error: 'Failed to fetch modules', detail: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }
