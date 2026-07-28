@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { questions, questionOptions } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
@@ -8,9 +8,13 @@ export async function GET(
   { params }: { params: Promise<{ assessmentId: string }> }
 ) {
   try {
+    const database = getDb();
+    if (!database) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+    }
     const { assessmentId } = await params;
 
-    const assessmentQuestions = await db
+    const assessmentQuestions = await database
       .select()
       .from(questions)
       .where(eq(questions.assessmentId, assessmentId));
@@ -21,7 +25,7 @@ export async function GET(
 
     const questionsWithOptions = await Promise.all(
       assessmentQuestions.map(async (q) => {
-        const options = await db
+        const options = await database
           .select()
           .from(questionOptions)
           .where(eq(questionOptions.questionId, q.id));

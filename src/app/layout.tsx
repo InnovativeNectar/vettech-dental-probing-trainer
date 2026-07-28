@@ -4,6 +4,9 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'VetTech Dental Probing Trainer',
   description: 'Interactive 3D dental probing simulation for veterinary technician education',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

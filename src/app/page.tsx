@@ -17,10 +17,10 @@ export default function HomePage() {
             <span className="text-lg font-bold">VetTech Dental Prober</span>
           </div>
           <Link
-            href="/login"
+            href="/dashboard"
             className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
-            Sign In
+            Dashboard
           </Link>
         </div>
       </header>
@@ -70,7 +70,7 @@ export default function HomePage() {
       </main>
 
       <footer className="border-t border-gray-200 bg-white py-6 text-center text-sm text-gray-400">
-        VetTech Dental Probing Trainer v0.1.0 — Built for veterinary education
+        VetTech Dental Probing Trainer — Built for veterinary education
       </footer>
     </div>
   );
