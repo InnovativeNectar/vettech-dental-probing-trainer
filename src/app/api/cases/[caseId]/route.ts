@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ caseId: string }> }
 ) {
   try {
-    const database = getDb();
+    const database = await getDb();
     if (!database) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
     }

@@ -5,7 +5,7 @@ import { asc } from 'drizzle-orm';
 
 export async function GET() {
   try {
-    const database = getDb();
+    const database = await getDb();
     if (!database) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
     }

@@ -1,5 +1,6 @@
 'use client';
 
+import { Canvas } from '@react-three/fiber';
 import { Lighting } from './Lighting';
 import { CameraController } from './CameraController';
 import { JawArch } from './JawArch';
@@ -20,7 +21,12 @@ export function Scene({ selectedTooth, highlightedTooth, onToothClick, showProbe
   const { position, rotation, depth, isInSulcus } = currentProbe;
 
   return (
-    <>
+    <Canvas
+      shadows
+      gl={{ antialias: true }}
+      camera={{ position: [0, 8, 12], fov: 45, near: 0.1, far: 1000 }}
+      style={{ width: '100%', height: '100%' }}
+    >
       <Lighting />
       <CameraController
         focusPoint={selectedTooth ? [0, 0, 0] : undefined}
@@ -46,6 +52,6 @@ export function Scene({ selectedTooth, highlightedTooth, onToothClick, showProbe
         <planeGeometry args={[50, 50]} />
         <meshStandardMaterial color="#1a1a2e" />
       </mesh>
-    </>
+    </Canvas>
   );
 }
