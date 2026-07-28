@@ -13,6 +13,8 @@ fi
 echo "Seeding database at $DATABASE_URL..."
 npx tsx scripts/seed-db.ts
 
-# Start with standalone server
+# Start with standalone server (bind to all interfaces for Railway)
 echo "Starting Next.js..."
+export HOSTNAME="0.0.0.0"
+export PORT="${PORT:-8080}"
 exec node .next/standalone/server.js
