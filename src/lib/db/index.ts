@@ -12,8 +12,8 @@ export function getDb(): DrizzleDb | null {
     let Database = require('better-sqlite3').default ?? require('better-sqlite3');
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
     const { drizzle } = require('drizzle-orm/better-sqlite3');
-    const dbPath = process.env.DATABASE_URL || 'dev.db';
-    console.log(`[db] Opening database at: ${dbPath}`);
+    const dbPath = process.env.DATABASE_URL || require('path').resolve(process.cwd(), 'dev.db');
+    console.log(`[db] Opening database at: ${dbPath} (cwd=${process.cwd()})`);
     const sqlite = new Database(dbPath);
     _db = drizzle(sqlite, { schema });
     console.log('[db] Database connected successfully.');

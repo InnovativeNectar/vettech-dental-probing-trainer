@@ -1,7 +1,8 @@
 #!/bin/sh
 set -e
 
-export DATABASE_URL="${DATABASE_URL:-dev.db}"
+# Use absolute path for database so both seed and server see the same file
+export DATABASE_URL="${DATABASE_URL:-$(pwd)/dev.db}"
 
 # Copy static assets for standalone mode
 if [ -d ".next/standalone" ]; then

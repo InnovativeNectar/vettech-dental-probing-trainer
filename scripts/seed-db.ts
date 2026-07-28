@@ -3,7 +3,7 @@ import { TRAINING_MODULES } from '../src/lib/training-data';
 import { CLINICAL_CASES } from '../src/lib/case-data';
 import { ASSESSMENTS } from '../src/lib/assessment-data';
 
-const dbPath = process.env.DATABASE_URL || 'dev.db';
+const dbPath = process.env.DATABASE_URL || require('path').resolve(process.cwd(), 'dev.db');
 const sqlite = new Database(dbPath);
 sqlite.pragma('journal_mode = WAL');
 sqlite.pragma('foreign_keys = OFF');
