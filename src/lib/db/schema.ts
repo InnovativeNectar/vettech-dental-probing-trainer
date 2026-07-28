@@ -99,3 +99,71 @@ export const pathologyData = sqliteTable('pathology_data', {
   mobility: integer('mobility').notNull().default(0),
   furcation: integer('furcation'),
 });
+
+export const lessons = sqliteTable('lessons', {
+  id: text('id').primaryKey(),
+  moduleId: text('module_id').notNull().references(() => modules.id),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  sortOrder: integer('sort_order').notNull(),
+  objectives: text('objectives'),
+  estimatedMinutes: integer('estimated_minutes').notNull(),
+});
+
+export const questions = sqliteTable('questions', {
+  id: text('id').primaryKey(),
+  assessmentId: text('assessment_id').notNull(),
+  type: text('type', {
+    enum: ['multiple_choice', 'image_identification', 'probe_simulation', 'charting', 'free_text'],
+  }).notNull(),
+  content: text('content').notNull(),
+  imageUrl: text('image_url'),
+  correctAnswer: text('correct_answer').notNull(),
+  points: integer('points').notNull().default(1),
+  explanation: text('explanation').notNull(),
+  sortOrder: integer('sort_order').notNull().default(0),
+});
+
+export const questionOptions = sqliteTable('question_options', {
+  id: text('id').primaryKey(),
+  questionId: text('question_id').notNull().references(() => questions.id),
+  text: text('text').notNull(),
+  isCorrect: integer('is_correct', { mode: 'boolean' }).notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+});
+
+export const caseAttempts = sqliteTable('case_attempts', {
+  id: text('id').primaryKey(),
+  caseId: text('case_id').notNull().references(() => dentalCases.id),
+  userId: text('user_id').notNull().references(() => users.id),
+  diagnosis: text('diagnosis'),
+  treatmentPlan: text('treatment_plan'),
+  score: real('score'),
+  completedAt: integer('completed_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const caseImages = sqliteTable('case_images', {
+  id: text('id').primaryKey(),
+  caseId: text('case_id').notNull().references(() => dentalCases.id),
+  url: text('url').notNull(),
+  alt: text('alt').notNull(),
+  type: text('type', { enum: ['clinical_photo', 'radiograph', 'diagram'] }).notNull(),
+});
+
+export const badges = sqliteTable('badges', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  name: text('name').notNull(),
+  description: text('description').notNull(),
+  iconUrl: text('icon_url'),
+  earnedAt: integer('earned_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const skillAreas = sqliteTable('skill_areas', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  name: text('name').notNull(),
+  level: integer('level').notNull().default(1),
+  xp: integer('xp').notNull().default(0),
+  maxXp: integer('max_xp').notNull().default(100),
+});
