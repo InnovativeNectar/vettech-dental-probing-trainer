@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { modules, lessons } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
@@ -8,14 +8,18 @@ export async function GET(
   { params }: { params: Promise<{ moduleId: string }> }
 ) {
   try {
+    const database = getDb();
+    if (!database) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+    }
     const { moduleId } = await params;
-    const [module] = await db.select().from(modules).where(eq(modules.id, moduleId));
+    const [module] = await database.select().from(modules).where(eq(modules.id, moduleId));
 
     if (!module) {
       return NextResponse.json({ error: 'Module not found' }, { status: 404 });
     }
 
-    const moduleLessons = await db
+    const moduleLessons = await database
       .select()
       .from(lessons)
       .where(eq(lessons.moduleId, moduleId));

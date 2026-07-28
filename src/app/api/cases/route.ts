@@ -1,10 +1,14 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { dentalCases } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
+    const database = getDb();
+    if (!database) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+    }
     const { searchParams } = new URL(request.url);
     const species = searchParams.get('species');
     const difficulty = searchParams.get('difficulty');
@@ -18,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     const where = conditions.length > 0 ? and(...conditions) : undefined;
-    const rows = await db.select().from(dentalCases).where(where);
+    const rows = await database.select().from(dentalCases).where(where);
 
     const result = rows.map((r) => ({
       ...r,

@@ -1,15 +1,19 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { progressRecords } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
+    const database = getDb();
+    if (!database) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+    }
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
     const where = userId ? eq(progressRecords.userId, userId) : undefined;
-    const rows = await db.select().from(progressRecords).where(where);
+    const rows = await database.select().from(progressRecords).where(where);
     return NextResponse.json(rows);
   } catch {
     return NextResponse.json({ error: 'Failed to fetch progress' }, { status: 500 });
@@ -18,6 +22,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const database = getDb();
+    if (!database) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+    }
     const body = await request.json();
     const { userId, moduleId, lessonId, status, score, timeSpentSeconds } = body;
 
@@ -39,13 +47,13 @@ export async function POST(request: NextRequest) {
       conditions.push(eq(progressRecords.lessonId, lessonId));
     }
 
-    const [existing] = await db
+    const [existing] = await database
       .select()
       .from(progressRecords)
       .where(and(...conditions));
 
     if (existing) {
-      await db
+      await database
         .update(progressRecords)
         .set({
           status,
@@ -61,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     const id = `progress-${Date.now()}`;
-    await db.insert(progressRecords).values({
+    await database.insert(progressRecords).values({
       id,
       userId,
       moduleId,

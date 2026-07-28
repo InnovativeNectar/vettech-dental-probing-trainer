@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { modules } from '@/lib/db/schema';
 import { asc } from 'drizzle-orm';
 
 export async function GET() {
   try {
-    const rows = await db.select().from(modules).orderBy(asc(modules.sortOrder));
+    const database = getDb();
+    if (!database) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+    }
+    const rows = await database.select().from(modules).orderBy(asc(modules.sortOrder));
     const result = rows.map((r) => ({
       ...r,
       requiredModules: r.requiredModules ? JSON.parse(r.requiredModules) : [],

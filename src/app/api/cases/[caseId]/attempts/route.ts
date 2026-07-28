@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { caseAttempts } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
@@ -8,8 +8,12 @@ export async function GET(
   { params }: { params: Promise<{ caseId: string }> }
 ) {
   try {
+    const database = getDb();
+    if (!database) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+    }
     const { caseId } = await params;
-    const attempts = await db
+    const attempts = await database
       .select()
       .from(caseAttempts)
       .where(eq(caseAttempts.caseId, caseId));
@@ -24,6 +28,10 @@ export async function POST(
   { params }: { params: Promise<{ caseId: string }> }
 ) {
   try {
+    const database = getDb();
+    if (!database) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+    }
     const { caseId } = await params;
     const body = await request.json();
     const { userId, diagnosis, treatmentPlan, score } = body;
@@ -35,7 +43,7 @@ export async function POST(
     const now = new Date();
     const id = `case-attempt-${Date.now()}`;
 
-    await db.insert(caseAttempts).values({
+    await database.insert(caseAttempts).values({
       id,
       caseId,
       userId,

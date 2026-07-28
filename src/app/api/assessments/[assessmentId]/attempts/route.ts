@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { assessmentResults } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
@@ -8,8 +8,12 @@ export async function GET(
   { params }: { params: Promise<{ assessmentId: string }> }
 ) {
   try {
+    const database = getDb();
+    if (!database) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+    }
     const { assessmentId } = await params;
-    const results = await db
+    const results = await database
       .select()
       .from(assessmentResults)
       .where(eq(assessmentResults.assessmentId, assessmentId));
@@ -24,6 +28,10 @@ export async function POST(
   { params }: { params: Promise<{ assessmentId: string }> }
 ) {
   try {
+    const database = getDb();
+    if (!database) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+    }
     const { assessmentId } = await params;
     const body = await request.json();
     const { userId, score, passed, answers, timeSpentSeconds } = body;
@@ -38,7 +46,7 @@ export async function POST(
     const now = new Date();
     const id = `assess-result-${Date.now()}`;
 
-    await db.insert(assessmentResults).values({
+    await database.insert(assessmentResults).values({
       id,
       assessmentId,
       userId,
