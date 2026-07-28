@@ -41,6 +41,7 @@ export interface Tooth {
 }
 
 export interface ProbeReading {
+  id: string;
   toothNumber: number;
   sulcusLocation: string; // mesial, distal, buccal, lingual
   depthMm: number;

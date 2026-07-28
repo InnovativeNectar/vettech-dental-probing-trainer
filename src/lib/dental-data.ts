@@ -65,3 +65,55 @@ export function getToothName(number: number): string {
 export function getTeethForSpecies(species: Species, ageGroup: AgeGroup): number[] {
   return MODIFIED_TRIADAN_NUMBERS[species][ageGroup] ?? [];
 }
+
+export interface ToothPosition {
+  number: number;
+  name: string;
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  width: number;
+}
+
+function generateArchPositions(upper: boolean): ToothPosition[] {
+  const teeth: ToothPosition[] = [];
+  const numbers = upper
+    ? [101, 102, 103, 104, 105, 106, 107, 108, 109,
+       201, 202, 203, 204, 205, 206, 207, 208, 209]
+    : [301, 302, 303, 304, 305, 306, 307, 308, 309, 310,
+       401, 402, 403, 404, 405, 406, 407, 408, 409, 410];
+
+  const rightSide = numbers.filter((n) => n < 200 || n > 300);
+  const leftSide = numbers.filter((n) => n >= 200 && n <= 300);
+
+  rightSide.forEach((num, i) => {
+    const angle = (i / (rightSide.length - 1)) * Math.PI * 0.4 - Math.PI * 0.2;
+    const x = Math.sin(angle) * 3;
+    const z = Math.cos(angle) * 3 - 1;
+    const y = upper ? 0.5 : -0.5;
+    teeth.push({
+      number: num,
+      name: getToothName(num),
+      position: [x, y, z],
+      rotation: [-Math.PI / 2, angle, 0],
+      width: num % 100 >= 4 && num % 100 <= 6 ? 0.35 : 0.2,
+    });
+  });
+
+  leftSide.forEach((num, i) => {
+    const angle = (i / (leftSide.length - 1)) * Math.PI * 0.4 + Math.PI * 0.2;
+    const x = Math.sin(angle) * 3;
+    const z = Math.cos(angle) * 3 - 1;
+    const y = upper ? 0.5 : -0.5;
+    teeth.push({
+      number: num,
+      name: getToothName(num),
+      position: [x, y, z],
+      rotation: [-Math.PI / 2, angle, 0],
+      width: num % 100 >= 4 && num % 100 <= 6 ? 0.35 : 0.2,
+    });
+  });
+
+  return teeth;
+}
+
+export const ADULT_DOG_TEETH: ToothPosition[] = generateArchPositions(true);
