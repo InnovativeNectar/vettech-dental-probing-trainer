@@ -8,6 +8,7 @@ interface TrainingControlsProps {
   onToggleProbeActive: () => void;
   onProbeReading: () => void;
   readingsCount: number;
+  onResetSession?: () => void;
 }
 
 export function TrainingControls({
@@ -18,6 +19,7 @@ export function TrainingControls({
   onToggleProbeActive,
   onProbeReading,
   readingsCount,
+  onResetSession,
 }: TrainingControlsProps) {
   return (
     <div className="flex w-72 flex-col border-l border-gray-200 bg-white">
@@ -85,7 +87,10 @@ export function TrainingControls({
       </div>
 
       <div className="border-t border-gray-200 p-4">
-        <button className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+        <button
+          onClick={onResetSession}
+          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
           Reset Session
         </button>
       </div>

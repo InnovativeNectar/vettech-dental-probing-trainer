@@ -17,13 +17,13 @@ import { formatDuration } from '@/lib/utils';
 import { getLevelFromXp, getLevelTitle, BADGE_DEFINITIONS } from '@/lib/gamification';
 
 export default function DashboardPage() {
-  const { data, isLoading, loadFromStorage } = useAnalyticsStore();
-  const { profile, loadDemoUser, isLoading: userLoading } = useUserStore();
+  const { data, isLoading, fetchAnalytics } = useAnalyticsStore();
+  const { profile, fetchUser, isLoading: userLoading } = useUserStore();
 
   useEffect(() => {
-    loadFromStorage();
-    loadDemoUser();
-  }, [loadFromStorage, loadDemoUser]);
+    fetchAnalytics('user-001');
+    fetchUser('user-001');
+  }, [fetchAnalytics, fetchUser]);
 
   if (isLoading || userLoading) {
     return (
