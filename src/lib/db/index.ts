@@ -12,7 +12,8 @@ export function getDb(): DrizzleDb | null {
     const Database = require('better-sqlite3').default;
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
     const { drizzle } = require('drizzle-orm/better-sqlite3');
-    const sqlite = new Database('dev.db');
+    const dbPath = process.env.DATABASE_URL || 'dev.db';
+    const sqlite = new Database(dbPath);
     _db = drizzle(sqlite, { schema });
   } catch {
     _db = null;
