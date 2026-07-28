@@ -1,5 +1,5 @@
 # nixpacks.toml — Railway build config
-# Adds Python for better-sqlite3 native compilation
+# Adds Python + GCC for better-sqlite3 native compilation
 
 [phases.setup]
-nixPkgs = ["python3", "nodejs_24"]
+nixPkgs = ["python3", "gcc", "nodejs_24"]
