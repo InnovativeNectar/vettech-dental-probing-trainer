@@ -121,27 +121,35 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
       set({ data: DEMO_DATA });
     }
   },
-  fetchAnalytics: async (userId) => {
-    set({ isLoading: true });
-    try {
-      const res = await fetch(`/api/analytics?userId=${userId || 'user-001'}`);
-      if (res.ok) {
-        const stats: Record<string, unknown> = await res.json();
-        set({
-          data: {
-            ...DEMO_DATA,
-            totalSessions: stats.totalSessions as number,
-            totalProbingTime: stats.totalProbingTime as number,
-            averageScore: stats.averageScore as number,
-            skillsCompleted: stats.skillsCompleted as number,
-          },
-          isLoading: false,
-        });
-        return;
+    fetchAnalytics: async (userId) => {
+      set({ isLoading: true });
+      try {
+        const res = await fetch(`/api/analytics?userId=${userId || 'user-001'}`);
+        if (res.ok) {
+          const stats: Record<string, unknown> = await res.json();
+          const totalSessions = stats.totalSessions as number;
+          const totalProbingTime = stats.totalProbingTime as number;
+          const averageScore = stats.averageScore as number;
+          const skillsCompleted = stats.skillsCompleted as number;
+          const badgesEarned = stats.badgesEarned as number;
+          const streakDays = stats.streakDays as number;
+          set({
+            data: {
+              ...DEMO_DATA,
+              totalSessions,
+              totalProbingTime,
+              averageScore,
+              skillsCompleted,
+              badgesEarned,
+              streakDays,
+            },
+            isLoading: false,
+          });
+          return;
+        }
+      } catch {
+        // API unavailable
       }
-    } catch {
-      // API unavailable
-    }
-    set({ data: DEMO_DATA, isLoading: false });
-  },
+      set({ data: DEMO_DATA, isLoading: false });
+    },
 }));
