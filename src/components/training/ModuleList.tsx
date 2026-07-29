@@ -16,14 +16,19 @@ export function ModuleList({ onSelectModule, completedModules = [], moduleProgre
   const handleSelect = onSelectModule ?? ((id: string) => { window.location.href = `/training/${id}`; });
   const [difficulty, setDifficulty] = useState<DifficultyLevel | 'all'>('all');
 
+  const sorted = [...TRAINING_MODULES].sort((a, b) => a.sortOrder - b.sortOrder);
   const filtered = difficulty === 'all'
-    ? TRAINING_MODULES
-    : TRAINING_MODULES.filter((m) => m.difficulty === difficulty);
+    ? sorted
+    : sorted.filter((m) => m.difficulty === difficulty);
 
   const isModuleLocked = (module: typeof TRAINING_MODULES[0]) => {
     if (completedModules.includes(module.id)) return false;
     return module.requiredModules.some((req) => !completedModules.includes(req));
   };
+
+  const nextUpModule = sorted.find(
+    (m) => !completedModules.includes(m.id) && !isModuleLocked(m)
+  );
 
   return (
     <div className="p-6">
@@ -50,6 +55,7 @@ export function ModuleList({ onSelectModule, completedModules = [], moduleProgre
             key={module.id}
             module={module}
             isLocked={isModuleLocked(module)}
+            isNextUp={nextUpModule?.id === module.id}
             progress={moduleProgress[module.id]}
             onSelect={handleSelect}
           />

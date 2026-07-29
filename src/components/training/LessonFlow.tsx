@@ -12,9 +12,29 @@ interface LessonFlowProps {
   onNextLesson?: () => void;
   onRetry?: () => void;
   onBackToModules: () => void;
+  isLastLesson?: boolean;
+  moduleTitle?: string;
+  moduleProgress?: number;
+  moduleLessonCount?: number;
+  nextLessonLabel?: string;
+  onPracticeMode?: () => void;
+  onNextModule?: () => void;
 }
 
-export function LessonFlow({ lesson, onComplete, onNextLesson, onRetry, onBackToModules }: LessonFlowProps) {
+export function LessonFlow({
+  lesson,
+  onComplete,
+  onNextLesson,
+  onRetry,
+  onBackToModules,
+  isLastLesson = false,
+  moduleTitle = '',
+  moduleProgress = 0,
+  moduleLessonCount = 0,
+  nextLessonLabel = '',
+  onPracticeMode,
+  onNextModule,
+}: LessonFlowProps) {
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
   const [showHint, setShowHint] = useState(false);
@@ -71,13 +91,20 @@ export function LessonFlow({ lesson, onComplete, onNextLesson, onRetry, onBackTo
     return (
       <LessonComplete
         lessonTitle={lesson.title}
+        lessonLabel={nextLessonLabel}
         totalSteps={steps.length}
         completedSteps={completedSteps.size}
         score={Math.round((completedSteps.size / steps.length) * 100)}
         timeSpentSeconds={elapsedTime}
+        isLastLesson={isLastLesson}
+        moduleTitle={moduleTitle}
+        moduleProgress={moduleProgress}
+        moduleLessonCount={moduleLessonCount}
         onNextLesson={onNextLesson}
         onRetry={onRetry}
         onBackToModules={onBackToModules}
+        onPracticeMode={onPracticeMode}
+        onNextModule={onNextModule}
       />
     );
   }

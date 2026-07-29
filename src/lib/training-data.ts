@@ -492,6 +492,8 @@ export const TRAINING_MODULES: TrainingModule[] = [
   },
 ];
 
+export const SORTED_MODULES: TrainingModule[] = TRAINING_MODULES.slice().sort((a, b) => a.sortOrder - b.sortOrder);
+
 export function getModuleById(id: string): TrainingModule | undefined {
   return TRAINING_MODULES.find((m) => m.id === id);
 }
