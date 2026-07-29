@@ -62,10 +62,6 @@ export function getToothName(number: number): string {
   return TOOTH_NAMES[number] ?? `Tooth ${number}`;
 }
 
-export function getTeethForSpecies(species: Species, ageGroup: AgeGroup): number[] {
-  return MODIFIED_TRIADAN_NUMBERS[species][ageGroup] ?? [];
-}
-
 export interface ToothPosition {
   number: number;
   name: string;
@@ -74,14 +70,8 @@ export interface ToothPosition {
   width: number;
 }
 
-function generateArchPositions(upper: boolean): ToothPosition[] {
+function generateArchPositions(numbers: number[], upper: boolean): ToothPosition[] {
   const teeth: ToothPosition[] = [];
-  const numbers = upper
-    ? [101, 102, 103, 104, 105, 106, 107, 108, 109,
-       201, 202, 203, 204, 205, 206, 207, 208, 209]
-    : [301, 302, 303, 304, 305, 306, 307, 308, 309, 310,
-       401, 402, 403, 404, 405, 406, 407, 408, 409, 410];
-
   const rightSide = numbers.filter((n) => n < 200 || n > 300);
   const leftSide = numbers.filter((n) => n >= 200 && n <= 300);
 
@@ -116,4 +106,12 @@ function generateArchPositions(upper: boolean): ToothPosition[] {
   return teeth;
 }
 
-export const ADULT_DOG_TEETH: ToothPosition[] = generateArchPositions(true);
+export function getTeethForSpecies(species: Species, ageGroup: AgeGroup, jaw?: 'upper' | 'lower'): ToothPosition[] {
+  const numbers = MODIFIED_TRIADAN_NUMBERS[species]?.[ageGroup] ?? [];
+  if (jaw) {
+    return generateArchPositions(numbers, jaw === 'upper');
+  }
+  return [...generateArchPositions(numbers, true), ...generateArchPositions(numbers, false)];
+}
+
+export const ADULT_DOG_TEETH: ToothPosition[] = getTeethForSpecies('canine', 'adult', 'upper');

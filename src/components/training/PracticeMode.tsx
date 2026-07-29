@@ -26,11 +26,13 @@ interface PracticeModeProps {
   onAgeGroupChange: (ageGroup: AgeGroup) => void;
 }
 
-export function PracticeMode({ species, ageGroup, onSpeciesChange, onAgeGroupChange }: PracticeModeProps) {
+export function PracticeMode({ species: speciesProp, ageGroup: ageGroupProp, onSpeciesChange, onAgeGroupChange }: PracticeModeProps) {
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
   const [highlightedTooth] = useState<number | null>(null);
   const [showProbe, setShowProbe] = useState(true);
   const [probeActive, setProbeActive] = useState(true);
+  const [species, setSpecies] = useState<Species>(speciesProp);
+  const [ageGroup, setAgeGroup] = useState<AgeGroup>(ageGroupProp);
 
   const { readings, currentProbe } = useProbeStore();
   const { depth, isInSulcus, currentTooth, currentLocation } = currentProbe;
@@ -56,6 +58,8 @@ export function PracticeMode({ species, ageGroup, onSpeciesChange, onAgeGroupCha
             onToothClick={handleToothClick}
             showProbe={showProbe}
             probeActive={probeActive}
+            species={species}
+            ageGroup={ageGroup}
           />
         </Suspense>
       </div>
@@ -76,8 +80,8 @@ export function PracticeMode({ species, ageGroup, onSpeciesChange, onAgeGroupCha
           <ToothSelector
             selectedSpecies={species}
             selectedAgeGroup={ageGroup}
-            onSpeciesChange={onSpeciesChange}
-            onAgeGroupChange={onAgeGroupChange}
+            onSpeciesChange={(s) => { setSpecies(s); onSpeciesChange(s); }}
+            onAgeGroupChange={(a) => { setAgeGroup(a); onAgeGroupChange(a); }}
           />
         </div>
 
