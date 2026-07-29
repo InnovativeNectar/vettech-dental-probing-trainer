@@ -70,10 +70,8 @@ export interface ToothPosition {
   width: number;
 }
 
-function generateArchPositions(numbers: number[], upper: boolean): ToothPosition[] {
+function generateArchPositions(rightSide: number[], leftSide: number[], upper: boolean): ToothPosition[] {
   const teeth: ToothPosition[] = [];
-  const rightSide = numbers.filter((n) => n < 200 || n > 300);
-  const leftSide = numbers.filter((n) => n >= 200 && n <= 300);
 
   rightSide.forEach((num, i) => {
     const angle = (i / (rightSide.length - 1)) * Math.PI * 0.4 - Math.PI * 0.2;
@@ -107,11 +105,36 @@ function generateArchPositions(numbers: number[], upper: boolean): ToothPosition
 }
 
 export function getTeethForSpecies(species: Species, ageGroup: AgeGroup, jaw?: 'upper' | 'lower'): ToothPosition[] {
-  const numbers = MODIFIED_TRIADAN_NUMBERS[species]?.[ageGroup] ?? [];
-  if (jaw) {
-    return generateArchPositions(numbers, jaw === 'upper');
+  const allNumbers = MODIFIED_TRIADAN_NUMBERS[species]?.[ageGroup] ?? [];
+  const upperNumbers = allNumbers.filter((n) => n < 300);
+  const lowerNumbers = allNumbers.filter((n) => n >= 300);
+  switch (jaw) {
+    case 'upper':
+      return generateArchPositions(
+        upperNumbers.filter((n) => n < 200),
+        upperNumbers.filter((n) => n >= 200),
+        true
+      );
+    case 'lower':
+      return generateArchPositions(
+        lowerNumbers.filter((n) => n >= 400),
+        lowerNumbers.filter((n) => n >= 300 && n < 400),
+        false
+      );
+    default:
+      return [
+        ...generateArchPositions(
+          upperNumbers.filter((n) => n < 200),
+          upperNumbers.filter((n) => n >= 200),
+          true
+        ),
+        ...generateArchPositions(
+          lowerNumbers.filter((n) => n >= 400),
+          lowerNumbers.filter((n) => n >= 300 && n < 400),
+          false
+        ),
+      ];
   }
-  return [...generateArchPositions(numbers, true), ...generateArchPositions(numbers, false)];
 }
 
 export const ADULT_DOG_TEETH: ToothPosition[] = getTeethForSpecies('canine', 'adult', 'upper');
