@@ -5,6 +5,7 @@ import type { TrainingModule } from '@/lib/training-data';
 interface ModuleCardProps {
   module: TrainingModule;
   isLocked: boolean;
+  isNextUp?: boolean;
   progress?: number; // 0-100
   onSelect: (moduleId: string) => void;
 }
@@ -26,7 +27,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   clinical: 'bg-purple-100 text-purple-700',
 };
 
-export function ModuleCard({ module, isLocked, progress = 0, onSelect }: ModuleCardProps) {
+export function ModuleCard({ module, isLocked, isNextUp, progress = 0, onSelect }: ModuleCardProps) {
   return (
     <button
       onClick={() => !isLocked && onSelect(module.id)}
@@ -34,14 +35,23 @@ export function ModuleCard({ module, isLocked, progress = 0, onSelect }: ModuleC
       className={`group flex w-full flex-col rounded-xl border p-5 text-left transition-all ${
         isLocked
           ? 'cursor-not-allowed border-gray-200 bg-gray-50 opacity-60'
-          : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
+          : isNextUp
+            ? 'border-blue-300 bg-blue-50 hover:shadow-md'
+            : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
       }`}
     >
       <div className="mb-3 flex items-start justify-between">
         <span className="text-2xl">{TYPE_ICONS[module.type] || '📚'}</span>
-        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${DIFFICULTY_COLORS[module.difficulty]}`}>
-          {module.difficulty}
-        </span>
+        <div className="flex items-center gap-1.5">
+          {isNextUp && !isLocked && (
+            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+              Next Up
+            </span>
+          )}
+          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${DIFFICULTY_COLORS[module.difficulty]}`}>
+            {module.difficulty}
+          </span>
+        </div>
       </div>
 
       <h3 className="mb-1 font-semibold text-gray-900 group-hover:text-blue-600">
