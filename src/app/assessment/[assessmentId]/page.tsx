@@ -56,6 +56,7 @@ export default function AssessmentDetailPage() {
         </button>
         <AssessmentFlow
           assessment={assessment}
+          userId="user-001"
           onComplete={setResult}
           onExit={() => router.push('/assessment')}
         />
