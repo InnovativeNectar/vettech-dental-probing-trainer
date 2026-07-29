@@ -1,22 +1,8 @@
 import { create } from 'zustand';
 import type { User, UserProfile, Badge } from '@/types';
 
-interface UserState {
-  user: User | null;
-  profile: UserProfile | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  setUser: (user: User) => void;
-  setProfile: (profile: UserProfile) => void;
-  logout: () => void;
-  setLoading: (loading: boolean) => void;
-  addBadge: (badge: Badge) => void;
-  updateSkillArea: (name: string, xp: number) => void;
-  loadDemoUser: () => void;
-}
-
 const DEMO_USER: User = {
-  id: 'demo-user-001',
+  id: 'user-001',
   email: 'demo@vettech.edu',
   name: 'Demo Student',
   role: 'student',
@@ -69,6 +55,21 @@ const DEMO_PROFILE: UserProfile = {
   ],
 };
 
+interface UserState {
+  user: User | null;
+  profile: UserProfile | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  setUser: (user: User) => void;
+  setProfile: (profile: UserProfile) => void;
+  logout: () => void;
+  setLoading: (loading: boolean) => void;
+  addBadge: (badge: Badge) => void;
+  updateSkillArea: (name: string, xp: number) => void;
+  loadDemoUser: () => void;
+  fetchUser: (userId?: string) => Promise<void>;
+}
+
 export const useUserStore = create<UserState>((set) => ({
   user: null,
   profile: null,
@@ -98,6 +99,30 @@ export const useUserStore = create<UserState>((set) => ({
         : null,
     })),
   loadDemoUser: () => {
+    set({ user: DEMO_USER, profile: DEMO_PROFILE, isAuthenticated: true, isLoading: false });
+  },
+  fetchUser: async (userId) => {
+    set({ isLoading: true });
+    try {
+      const id = userId || 'user-001';
+      const res = await fetch(`/api/users/${id}`);
+      if (res.ok) {
+        const data: Record<string, unknown> = await res.json();
+        const user: User = {
+          id: data.id as string,
+          email: data.email as string,
+          name: data.name as string,
+          role: data.role as User['role'],
+          institution: data.institution as string | undefined,
+          createdAt: new Date((data.created_at as number) * 1000),
+          updatedAt: new Date((data.updated_at as number) * 1000),
+        };
+        set({ user, isAuthenticated: true, isLoading: false });
+        return;
+      }
+    } catch {
+      // API unavailable — fall back to demo
+    }
     set({ user: DEMO_USER, profile: DEMO_PROFILE, isAuthenticated: true, isLoading: false });
   },
 }));

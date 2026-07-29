@@ -5,13 +5,51 @@ import Link from 'next/link';
 import { LessonFlow } from '@/components/training';
 import { PracticeMode } from '@/components/training';
 import { TRAINING_MODULES } from '@/lib/training-data';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useUserStore } from '@/stores';
 
 export default function ModulePage() {
   const { moduleId } = useParams<{ moduleId: string }>();
   const [mode, setMode] = useState<'lessons' | 'practice'>('lessons');
+  const [lessonIdx, setLessonIdx] = useState(0);
+  const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
+  const user = useUserStore((s) => s.user);
 
   const mod = TRAINING_MODULES.find((m) => m.id === moduleId);
+  const currentLesson = mod?.lessons[lessonIdx];
+  const allLessonsComplete = currentLesson ? completedLessonIds.size >= mod.lessons.length : false;
+
+  const handleComplete = useCallback(async (score: number, timeSpent: number) => {
+    if (!user || !currentLesson) return;
+    try {
+      await fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          moduleId: moduleId,
+          lessonId: currentLesson.id,
+          status: 'completed',
+          score,
+          timeSpentSeconds: timeSpent,
+        }),
+      });
+    } catch {
+      // API unavailable — still allow progress locally
+    }
+    setCompletedLessonIds((prev) => new Set(prev).add(currentLesson.id));
+  }, [user, moduleId, currentLesson]);
+
+  const handleNextLesson = useCallback(() => {
+    if (mod && lessonIdx + 1 < mod.lessons.length) {
+      setLessonIdx((i) => i + 1);
+    }
+  }, [lessonIdx, mod?.lessons.length]);
+
+  const handleRetry = useCallback(() => {
+    setLessonIdx(0);
+    setCompletedLessonIds(new Set());
+  }, []);
 
   if (!mod) {
     return (
@@ -25,8 +63,6 @@ export default function ModulePage() {
       </div>
     );
   }
-
-  const firstLesson = mod.lessons[0];
 
   return (
     <div className="flex min-h-screen">
@@ -66,20 +102,22 @@ export default function ModulePage() {
         </div>
 
         <div className="p-8">
-          {mode === 'lessons' && firstLesson ? (
+          {mode === 'lessons' && currentLesson ? (
             <LessonFlow
-              lesson={firstLesson}
-              onComplete={() => {}}
+              lesson={currentLesson}
+              onComplete={handleComplete}
+              onNextLesson={allLessonsComplete ? undefined : handleNextLesson}
               onBackToModules={() => { window.location.href = '/training'; }}
+              onRetry={handleRetry}
             />
-          ) : (
+          ) : mode === 'practice' ? (
             <PracticeMode
               species="canine"
               ageGroup="adult"
               onSpeciesChange={() => {}}
               onAgeGroupChange={() => {}}
             />
-          )}
+          ) : null}
         </div>
       </div>
     </div>

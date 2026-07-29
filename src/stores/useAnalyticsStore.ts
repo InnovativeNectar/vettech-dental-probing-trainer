@@ -28,6 +28,7 @@ interface AnalyticsState {
   setTimeRange: (range: 'week' | 'month' | 'year') => void;
   setLoading: (loading: boolean) => void;
   loadFromStorage: () => void;
+  fetchAnalytics: (userId?: string) => Promise<void>;
 }
 
 const DEMO_DATA: AnalyticsData = {
@@ -119,5 +120,28 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
     } catch {
       set({ data: DEMO_DATA });
     }
+  },
+  fetchAnalytics: async (userId) => {
+    set({ isLoading: true });
+    try {
+      const res = await fetch(`/api/analytics?userId=${userId || 'user-001'}`);
+      if (res.ok) {
+        const stats: Record<string, unknown> = await res.json();
+        set({
+          data: {
+            ...DEMO_DATA,
+            totalSessions: stats.totalSessions as number,
+            totalProbingTime: stats.totalProbingTime as number,
+            averageScore: stats.averageScore as number,
+            skillsCompleted: stats.skillsCompleted as number,
+          },
+          isLoading: false,
+        });
+        return;
+      }
+    } catch {
+      // API unavailable
+    }
+    set({ data: DEMO_DATA, isLoading: false });
   },
 }));

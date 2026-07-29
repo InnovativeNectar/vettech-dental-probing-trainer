@@ -9,10 +9,12 @@ import { LessonComplete } from './LessonComplete';
 interface LessonFlowProps {
   lesson: TrainingLesson;
   onComplete: (score: number, timeSpent: number) => void;
+  onNextLesson?: () => void;
+  onRetry?: () => void;
   onBackToModules: () => void;
 }
 
-export function LessonFlow({ lesson, onComplete, onBackToModules }: LessonFlowProps) {
+export function LessonFlow({ lesson, onComplete, onNextLesson, onRetry, onBackToModules }: LessonFlowProps) {
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
   const [showHint, setShowHint] = useState(false);
@@ -73,6 +75,8 @@ export function LessonFlow({ lesson, onComplete, onBackToModules }: LessonFlowPr
         completedSteps={completedSteps.size}
         score={Math.round((completedSteps.size / steps.length) * 100)}
         timeSpentSeconds={elapsedTime}
+        onNextLesson={onNextLesson}
+        onRetry={onRetry}
         onBackToModules={onBackToModules}
       />
     );
