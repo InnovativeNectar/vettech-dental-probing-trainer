@@ -12,6 +12,8 @@ interface ModuleListProps {
   moduleProgress?: Record<string, number>;
 }
 
+const MODULES_BY_ID = Object.fromEntries(TRAINING_MODULES.map((m) => [m.id, m]));
+
 export function ModuleList({ onSelectModule, completedModules = [], moduleProgress = {} }: ModuleListProps) {
   const handleSelect = onSelectModule ?? ((id: string) => { window.location.href = `/training/${id}`; });
   const [difficulty, setDifficulty] = useState<DifficultyLevel | 'all'>('all');
@@ -26,9 +28,14 @@ export function ModuleList({ onSelectModule, completedModules = [], moduleProgre
     return module.requiredModules.some((req) => !completedModules.includes(req));
   };
 
-  const nextUpModule = sorted.find(
-    (m) => !completedModules.includes(m.id) && !isModuleLocked(m)
-  );
+  const prerequisiteTitles = (module: typeof TRAINING_MODULES[0]) => {
+    return module.requiredModules
+      .filter((req) => !completedModules.includes(req))
+      .map((req) => MODULES_BY_ID[req]?.title)
+      .filter(Boolean);
+  };
+
+  const nextUpModule = sorted.find((m) => !completedModules.includes(m.id));
 
   return (
     <div className="p-6">
@@ -58,6 +65,7 @@ export function ModuleList({ onSelectModule, completedModules = [], moduleProgre
             isNextUp={nextUpModule?.id === module.id}
             progress={moduleProgress[module.id]}
             onSelect={handleSelect}
+            prerequisiteTitles={prerequisiteTitles(module)}
           />
         ))}
       </div>
