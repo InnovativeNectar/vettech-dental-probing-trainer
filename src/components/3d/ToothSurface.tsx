@@ -28,7 +28,7 @@ export const ToothSurface = forwardRef<THREE.Group, ToothSurfaceProps>(({ teeth 
     const material = new THREE.MeshStandardMaterial({
       color: '#ff6b6b',
       transparent: true,
-      opacity: 0.05,
+      opacity: 0.15,
       side: THREE.DoubleSide,
       visible: true,
     });

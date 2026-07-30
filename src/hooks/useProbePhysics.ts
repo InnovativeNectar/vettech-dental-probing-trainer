@@ -41,7 +41,6 @@ export function useProbePhysics({
   ageGroup = 'adult',
 }: UseProbePhysicsOptions) {
   const raycaster = useRef(new THREE.Raycaster());
-  const mouse = useRef(new THREE.Vector2());
   const lastSulcusState = useRef(false);
   const lastDepth = useRef(0);
   const lastSite = useRef<ProbingSite | null>(null);
@@ -62,19 +61,11 @@ export function useProbePhysics({
     maxDepthReached,
   } = useProbeStore();
 
-  const updateRaycast = useCallback(
-    (event: { clientX: number; clientY: number }) => {
-      mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    },
-    [],
-  );
-
   const snapToSurface = useCallback(
-    (camera: THREE.Camera): SnapResult | null => {
+    (camera: THREE.Camera, pointer: THREE.Vector2): SnapResult | null => {
       if (!surfaceRef?.current) return null;
 
-      raycaster.current.setFromCamera(mouse.current, camera);
+      raycaster.current.setFromCamera(pointer, camera);
       const intersects = raycaster.current.intersectObject(surfaceRef.current, true);
 
       if (intersects.length > 0) {
@@ -101,7 +92,7 @@ export function useProbePhysics({
     if (!enabled) return;
 
     const probe = currentProbe;
-    const target = snapToSurface(state.camera);
+    const target = snapToSurface(state.camera, state.pointer);
 
     if (target) {
       const { point, normal } = target;
@@ -119,6 +110,7 @@ export function useProbePhysics({
         probe.depth,
         Math.max(maxDepthReached, 12),
         config,
+        delta,
       );
 
       const effectiveResistance = resistanceForce * angleValidation.penaltyFactor;
@@ -179,13 +171,11 @@ export function useProbePhysics({
   });
 
   return {
-    updateRaycast,
     snapToSurface,
     lastSulcusState,
   };
 }
 
-let toothNumberCounter = 0;
 function getToothNumberFromHit(object: THREE.Object3D): number {
   let current: THREE.Object3D | null = object;
   while (current) {
@@ -194,5 +184,5 @@ function getToothNumberFromHit(object: THREE.Object3D): number {
     if (match) return parseInt(match[1], 10);
     current = current.parent;
   }
-  return toothNumberCounter++ % 32 + 1;
+  return 1;
 }

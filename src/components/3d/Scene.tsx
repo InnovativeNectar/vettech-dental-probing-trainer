@@ -1,13 +1,14 @@
 'use client';
 
 import { Canvas } from '@react-three/fiber';
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import * as THREE from 'three';
 import { Lighting } from './Lighting';
 import { CameraController } from './CameraController';
 import { JawArch } from './JawArch';
 import { Probe } from './Probe';
 import { ToothSurface } from './ToothSurface';
+import { Sulcus } from './Sulcus';
 import { useProbeStore } from '@/stores';
 import { useProbePhysics } from '@/hooks/useProbePhysics';
 import { getTeethForSpecies } from '@/lib/dental-data';
@@ -21,7 +22,10 @@ interface SceneProps {
   probeActive?: boolean;
   species?: Species;
   ageGroup?: AgeGroup;
+  jawType?: 'upper' | 'lower';
 }
+
+const JAW_Y_OFFSET: Record<string, number> = { upper: 0.5, lower: -0.5 };
 
 function SceneInner({
   selectedTooth,
@@ -31,14 +35,16 @@ function SceneInner({
   probeActive = true,
   species = 'canine',
   ageGroup = 'adult',
+  jawType = 'upper',
 }: SceneProps) {
-  const { currentProbe, maxDepthReached, setProbeDepth, setInSulcus } = useProbeStore();
-  const { position, rotation, depth, isInSulcus } = currentProbe;
+  const { currentProbe, maxDepthReached, setProbeDepth, setInSulcus, siteReadings } = useProbeStore();
+  const { position, rotation, depth, isInSulcus, currentTooth } = currentProbe;
   const teeth = getTeethForSpecies(species, ageGroup);
+  const yOffset = JAW_Y_OFFSET[jawType] ?? 0.5;
 
   const surfaceRef = useRef<THREE.Group>(null);
 
-  const { updateRaycast } = useProbePhysics({
+  useProbePhysics({
     enabled: probeActive,
     surfaceRef,
     species,
@@ -54,16 +60,6 @@ function SceneInner({
     },
   });
 
-  useEffect(() => {
-    const handlePointerMove = (e: PointerEvent) => {
-      updateRaycast(e);
-    };
-    if (probeActive) {
-      window.addEventListener('pointermove', handlePointerMove);
-      return () => window.removeEventListener('pointermove', handlePointerMove);
-    }
-  }, [probeActive, updateRaycast]);
-
   return (
     <>
       <Lighting />
@@ -71,14 +67,33 @@ function SceneInner({
         focusPoint={selectedTooth ? [0, 0, 0] : undefined}
         probeActive={probeActive}
       />
-      <JawArch
-        teeth={teeth}
-        selectedTooth={selectedTooth}
-        highlightedTooth={highlightedTooth}
-        onToothClick={onToothClick}
-        jawType="upper"
-      />
-      <ToothSurface ref={surfaceRef} teeth={teeth} />
+      <group position={[0, yOffset, 0]}>
+        <JawArch
+          teeth={teeth}
+          selectedTooth={selectedTooth}
+          highlightedTooth={highlightedTooth}
+          onToothClick={onToothClick}
+          jawType={jawType}
+        />
+        <ToothSurface ref={surfaceRef} teeth={teeth} />
+      </group>
+      {teeth.map((tooth) => {
+        const readings = siteReadings[`${tooth.number}-${currentProbe.currentLocation}`];
+        const hasBleeding = readings?.some((r) => r.depth > 4) ?? false;
+        const hasInflammation = readings?.some((r) => r.depth > 3) ?? false;
+        const siteDepth = readings?.[readings.length - 1]?.depth ?? 0;
+        const isCurrent = currentTooth === tooth.number && isInSulcus;
+        return (
+          <Sulcus
+            key={tooth.number}
+            toothPosition={[tooth.position[0], tooth.position[1] + yOffset, tooth.position[2]]}
+            toothWidth={tooth.width}
+            depthMm={isCurrent ? Math.max(depth, siteDepth) : siteDepth}
+            hasBleeding={hasBleeding}
+            hasInflammation={hasInflammation}
+          />
+        );
+      })}
       {showProbe && (
         <Probe
           position={position}

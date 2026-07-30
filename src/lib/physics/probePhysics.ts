@@ -19,7 +19,7 @@ export const DEFAULT_PROBE_PHYSICS: ProbePhysicsConfig = {
   depthResistance: 8.0,
   sulcusBaseResistance: 3.0,
   tissueElasticity: 0.6,
-  snapSpeed: 18.0,
+  snapSpeed: 3.0,
   gingiva: DEFAULT_GINGIVA_CONFIG,
 };
 
@@ -112,6 +112,7 @@ export function computeProbeForce(
   currentDepth: number,
   maxDepth: number,
   config: ProbePhysicsConfig = DEFAULT_PROBE_PHYSICS,
+  delta: number = 1 / 60,
 ): ProbeForceResult {
   const dx = targetPosition[0] - currentPosition[0];
   const dy = targetPosition[1] - currentPosition[1];
@@ -135,7 +136,7 @@ export function computeProbeForce(
   const resistanceForce = config.sulcusBaseResistance + rawDepthFactor * config.depthResistance + gingivaResistance;
   const isAtSurface = distance < 0.15;
 
-  const t = Math.min(1, distance / config.snapSpeed);
+  const t = Math.min(1, distance > 0.001 ? (config.snapSpeed * delta) / distance : 1);
   const smoothT = t * t * (3 - 2 * t);
 
   const x = currentPosition[0] + (targetPosition[0] - currentPosition[0]) * smoothT;

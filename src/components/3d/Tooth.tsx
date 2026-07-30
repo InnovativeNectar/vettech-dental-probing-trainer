@@ -3,6 +3,7 @@
 import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useProbeStore } from '@/stores/useProbeStore';
 
 export type ToothClass = 'incisor' | 'canine' | 'premolar' | 'molar';
 
@@ -120,6 +121,7 @@ const TOOTH_COLORS: Record<ToothClass, string> = {
 
 export function Tooth({ toothNumber, position, rotation = [0, 0, 0], toothClass, width, height, isUpper, isSelected, isHighlighted, onClick }: ToothProps) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const isProbeActive = useProbeStore((s) => s.currentProbe.isInSulcus && s.currentProbe.currentTooth === toothNumber);
   const depthRatios: Record<ToothClass, number> = {
     incisor: 0.55,
     canine: 0.65,
@@ -130,13 +132,13 @@ export function Tooth({ toothNumber, position, rotation = [0, 0, 0], toothClass,
   const geometry = useMemo(() => createGeometry(toothClass, width, height, depth), [toothClass, width, height, depth]);
 
   useFrame(() => {
-    if (meshRef.current && isHighlighted) {
+    if (meshRef.current && (isHighlighted || isProbeActive)) {
       meshRef.current.scale.setScalar(1 + Math.sin(Date.now() * 0.005) * 0.02);
     }
   });
 
   const defaultColor = TOOTH_COLORS[toothClass];
-  const color = isSelected ? '#ff6b6b' : isHighlighted ? '#ffd93d' : defaultColor;
+  const color = isSelected ? '#ff6b6b' : isProbeActive ? '#6bc5ff' : isHighlighted ? '#ffd93d' : defaultColor;
 
   return (
     <mesh
