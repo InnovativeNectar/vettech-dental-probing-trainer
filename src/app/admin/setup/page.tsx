@@ -37,25 +37,17 @@ export default function AdminSetupPage() {
   const [userCounts, setUserCounts] = useState({ total: 0, admin: 0, instructor: 0, student: 0 });
 
   useEffect(() => {
-    loadAuthConfig();
-    checkSetup();
-  }, []);
-
-  async function loadAuthConfig() {
-    try {
-      const res = await fetch('/api/admin/settings');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.auth) setAuth(data.auth);
-      }
-    } catch { /* silent */ }
-  }
-
-  async function checkSetup() {
-    try {
-      const res = await fetch('/api/admin/stats');
-      if (res.ok) {
-        const stats = await res.json();
+    let cancelled = false;
+    fetch('/api/admin/settings')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.auth) setAuth(data.auth);
+      })
+      .catch(() => {});
+    fetch('/api/admin/stats')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((stats) => {
+        if (cancelled || !stats) return;
         setChecklist({
           databaseConnected: true,
           hasUsers: stats.totalUsers > 0,
@@ -68,9 +60,12 @@ export default function AdminSetupPage() {
           instructor: stats.instructorCount ?? 0,
           student: stats.studentCount ?? 0,
         });
-      }
-    } catch { /* silent */ }
-  }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
