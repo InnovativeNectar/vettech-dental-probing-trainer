@@ -258,7 +258,7 @@ function generateToothPosition(
   const t = count > 1 ? spec.index / (count - 1) : 0.5;
   const x = archX(t, arch, sign);
   const z = archZ(t, arch);
-  const y = upper ? 0 : 0;
+  const y = upper ? 0.6 : -0.6;
   return [x, y, z];
 }
 
@@ -306,36 +306,34 @@ function generateArchTeeth(
 
 export function getTeethForSpecies(species: Species, ageGroup: AgeGroup, jaw?: 'upper' | 'lower'): ToothData[] {
   const arch = getArchConfig(species);
+  const juvenile = ageGroup === 'juvenile';
 
-  if (jaw === 'upper' || !jaw) {
-    const rightSpecs = getQuadrantSpecs(species, 'upperRight');
-    const leftSpecs = getQuadrantSpecs(species, 'upperLeft');
-    const upperTeeth = [
-      ...generateArchTeeth(rightSpecs, arch, -1, true),
-      ...generateArchTeeth(leftSpecs, arch, 1, true),
-    ];
-    if (jaw === 'upper') return upperTeeth;
+  const remapSpec = (spec: ToothSpec, quadrant: 'upperRight' | 'upperLeft' | 'lowerRight' | 'lowerLeft'): ToothSpec => {
+    if (!juvenile) return spec;
+    const triadanNumbers = MODIFIED_TRIADAN_NUMBERS[species][ageGroup];
+    const order = [ 'upperRight', 'upperLeft', 'lowerLeft', 'lowerRight' ].indexOf(quadrant);
+    const offset = order * 5;
+    return { ...spec, number: 500 + offset + spec.index + 1 };
+  };
+
+  const buildQuadrant = (quadrant: 'upperRight' | 'upperLeft' | 'lowerRight' | 'lowerLeft', sign: number, upper: boolean): ToothData[] => {
+    const specs = getQuadrantSpecs(species, quadrant).map((s) => remapSpec(s, quadrant));
+    return generateArchTeeth(specs, arch, sign, upper);
+  };
+
+  if (jaw === 'upper') {
+    return [...buildQuadrant('upperRight', -1, true), ...buildQuadrant('upperLeft', 1, true)];
   }
 
-  if (jaw === 'lower' || !jaw) {
-    const rightSpecs = getQuadrantSpecs(species, 'lowerRight');
-    const leftSpecs = getQuadrantSpecs(species, 'lowerLeft');
-    const lowerTeeth = [
-      ...generateArchTeeth(rightSpecs, arch, -1, false),
-      ...generateArchTeeth(leftSpecs, arch, 1, false),
-    ];
-    if (jaw === 'lower') return lowerTeeth;
+  if (jaw === 'lower') {
+    return [...buildQuadrant('lowerRight', -1, false), ...buildQuadrant('lowerLeft', 1, false)];
   }
 
-  const rightUpper = getQuadrantSpecs(species, 'upperRight');
-  const leftUpper = getQuadrantSpecs(species, 'upperLeft');
-  const rightLower = getQuadrantSpecs(species, 'lowerRight');
-  const leftLower = getQuadrantSpecs(species, 'lowerLeft');
   return [
-    ...generateArchTeeth(rightUpper, arch, -1, true),
-    ...generateArchTeeth(leftUpper, arch, 1, true),
-    ...generateArchTeeth(rightLower, arch, -1, false),
-    ...generateArchTeeth(leftLower, arch, 1, false),
+    ...buildQuadrant('upperRight', -1, true),
+    ...buildQuadrant('upperLeft', 1, true),
+    ...buildQuadrant('lowerRight', -1, false),
+    ...buildQuadrant('lowerLeft', 1, false),
   ];
 }
 
