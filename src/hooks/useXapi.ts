@@ -4,6 +4,10 @@ import { useCallback } from 'react';
 import { useUserStore } from '@/stores';
 import type { XAPIStatement, XAPIVerb } from '@/types';
 
+const LRS_ENDPOINT = process.env.NEXT_PUBLIC_LRS_ENDPOINT || '';
+const LRS_AUTH = process.env.NEXT_PUBLIC_LRS_AUTH || '';
+const LRS_ENABLED = process.env.NEXT_PUBLIC_LRS_ENABLED === 'true';
+
 function generateId(): string {
   return `urn:uuid:${crypto.randomUUID()}`;
 }
@@ -33,9 +37,44 @@ export function useXapi() {
   );
 
   const sendStatement = useCallback(async (statement: XAPIStatement) => {
-    // Phase 4: Send to LRS endpoint
-    console.warn('xAPI Statement:', statement);
-    return { success: true, statementId: statement.id };
+    if (!LRS_ENABLED || !LRS_ENDPOINT) {
+      console.warn('xAPI LRS not configured — statement logged locally:', statement.id);
+      return { success: true, statementId: statement.id, localOnly: true };
+    }
+
+    try {
+      const response = await fetch(`${LRS_ENDPOINT}/statements`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': LRS_AUTH ? `Basic ${LRS_AUTH}` : '',
+          'X-Experience-API-Version': '1.0.3',
+        },
+        body: JSON.stringify({
+          ...statement,
+          timestamp: statement.timestamp instanceof Date ? statement.timestamp.toISOString() : statement.timestamp,
+          result: statement.result ? {
+            ...statement.result,
+            score: statement.result.score ? {
+              ...statement.result.score,
+              scaled: statement.result.score.scaled,
+            } : undefined,
+          } : undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        console.error('xAPI LRS error:', response.status, err);
+        return { success: false, error: err, status: response.status };
+      }
+
+      const data = await response.json();
+      return { success: true, statementId: statement.id, lrsResponse: data };
+    } catch (err) {
+      console.error('xAPI LRS network error:', err);
+      return { success: false, error: String(err), localOnly: true };
+    }
   }, []);
 
   const trackProbingAction = useCallback(
