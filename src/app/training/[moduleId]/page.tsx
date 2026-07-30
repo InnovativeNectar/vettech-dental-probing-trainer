@@ -21,9 +21,9 @@ export default function ModulePage() {
   const [ageGroup, setAgeGroup] = useState<AgeGroup>('adult');
   const user = useUserStore((s) => s.user);
 
-  const mod = TRAINING_MODULES.find((m) => m.id === moduleId);
-  const currentLesson = mod?.lessons[lessonIdx];
-  const allLessonsComplete = currentLesson ? completedLessonIds.size >= mod.lessons.length : false;
+  const mod = useMemo(() => TRAINING_MODULES.find((m) => m.id === moduleId), [moduleId]);
+  const currentLesson = useMemo(() => mod?.lessons[lessonIdx], [mod, lessonIdx]);
+  const allLessonsComplete = currentLesson ? completedLessonIds.size >= (mod?.lessons.length ?? 0) : false;
 
   const modIdx = useMemo(() => SORTED_MODULES.findIndex((m) => m.id === moduleId), [moduleId]);
   const prevModule = modIdx > 0 ? SORTED_MODULES[modIdx - 1] : null;

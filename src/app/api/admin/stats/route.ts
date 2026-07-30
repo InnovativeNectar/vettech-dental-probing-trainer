@@ -12,6 +12,7 @@ export async function GET(_request: Request) {
     const allUsers = await database.select().from(users);
     const students = allUsers.filter(u => u.role === 'student');
     const instructors = allUsers.filter(u => u.role === 'instructor');
+    const admins = allUsers.filter(u => u.role === 'admin');
 
     const allModules = await database.select().from(modules);
     const allLessons = await database.select().from(lessons);
@@ -26,8 +27,10 @@ export async function GET(_request: Request) {
       : 0;
 
     return NextResponse.json({
+      totalUsers: allUsers.length,
       totalStudents: students.length,
       totalInstructors: instructors.length,
+      adminCount: admins.length,
       totalModules: allModules.length,
       totalSessions,
       totalAssignments,

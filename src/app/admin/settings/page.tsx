@@ -15,17 +15,17 @@ export default function AdminSettingsPage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    fetchSettings();
+    let cancelled = false;
+    fetch('/api/admin/settings')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setLrs(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
-
-  async function fetchSettings() {
-    try {
-      const res = await fetch('/api/admin/settings');
-      if (res.ok) setLrs(await res.json());
-    } catch {
-      // silent
-    }
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

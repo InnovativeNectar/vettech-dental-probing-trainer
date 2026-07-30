@@ -1,9 +1,20 @@
 'use client';
 
-import { Tooth } from './Tooth';
+import { Tooth, type ToothClass } from './Tooth';
+
+interface JawToothData {
+  number: number;
+  name: string;
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  toothClass: ToothClass;
+  width: number;
+  height: number;
+  isUpper: boolean;
+}
 
 interface JawArchProps {
-  teeth: Array<{ number: number; name: string; position: [number, number, number]; rotation?: [number, number, number] }>;
+  teeth: JawToothData[];
   selectedTooth: number | null;
   highlightedTooth: number | null;
   onToothClick?: (toothNumber: number) => void;
@@ -20,8 +31,12 @@ export function JawArch({ teeth, selectedTooth, highlightedTooth, onToothClick, 
         <Tooth
           key={tooth.number}
           toothNumber={tooth.number}
+          toothClass={tooth.toothClass}
           position={tooth.position}
           rotation={tooth.rotation || [0, 0, 0]}
+          width={tooth.width}
+          height={tooth.height}
+          isUpper={tooth.isUpper}
           isSelected={selectedTooth === tooth.number}
           isHighlighted={highlightedTooth === tooth.number}
           onClick={onToothClick}

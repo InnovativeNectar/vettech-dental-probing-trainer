@@ -14,28 +14,28 @@ const DEMO_USER: User = {
 const DEMO_PROFILE: UserProfile = {
   ...DEMO_USER,
   totalPoints: 2450,
-  badges: [
-    {
-      id: 'first-session',
-      name: 'First Steps',
-      description: 'Complete your first training session',
-      iconUrl: '🎯',
-      earnedAt: new Date('2026-01-20'),
-    },
-    {
-      id: 'ten-sessions',
-      name: 'Dedicated Learner',
-      description: 'Complete 10 training sessions',
-      iconUrl: '📚',
-      earnedAt: new Date('2026-03-10'),
-    },
-    {
-      id: 'streak-3',
-      name: 'On a Roll',
-      description: 'Maintain a 3-day practice streak',
-      iconUrl: '🔥',
-      earnedAt: new Date('2026-07-25'),
-    },
+    badges: [
+      {
+        id: 'first-probe',
+        name: 'First Probe',
+        description: 'Complete your first probing session',
+        iconUrl: '🎯',
+        earnedAt: new Date('2026-01-20'),
+      },
+      {
+        id: 'dedicated-student',
+        name: 'Dedicated Student',
+        description: 'Complete 10 probing sessions',
+        iconUrl: '📚',
+        earnedAt: new Date('2026-03-10'),
+      },
+      {
+        id: 'streak-starter',
+        name: 'Streak Starter',
+        description: 'Maintain a 3-day practice streak',
+        iconUrl: '🔥',
+        earnedAt: new Date('2026-07-25'),
+      },
     {
       id: 'accuracy-king',
       name: 'Accuracy King',

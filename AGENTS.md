@@ -22,9 +22,49 @@ npm run typecheck    # Type check
 - **3D Engine:** Three.js + React Three Fiber + Drei
 - **State:** Zustand
 - **Styling:** Tailwind CSS 4
-- **Database:** SQLite (Drizzle ORM)
+- **Database:** SQLite (Drizzle ORM) on Railway persistent volume
 - **Testing:** Vitest + Testing Library
-- **Branching:** Git Flow (main, develop, feature/*, release/*, hotfix/*)
+- **CI/CD:** GitHub Actions → Railway auto-deploy
+- **Hosting:** Railway (production environment)
+
+## Branching & Deployment Strategy
+
+### Branches
+
+| Branch | Purpose | Deploys to |
+|--------|---------|------------|
+| `main` | Production-ready code | Railway production (via auto-deploy) |
+| `develop` | Integration branch for active dev | Railway production (via auto-deploy) |
+| `feature/*` | New features, branch off `develop` | Never |
+| `hotfix/*` | Urgent fixes, branch off `main` | Never |
+| `release/*` | Release candidates, branch off `develop`, merge to `main` | Never |
+
+### Workflow
+
+1. **Develop:** Branch `feature/*` from `develop`. PR back to `develop` when ready.
+2. **CI:** Every push/PR to `develop`/`main` runs `typecheck → lint → build → test`.
+3. **Deploy (develop):** Merges to `develop` auto-deploy to Railway production (preview).
+4. **Release:** Merge `develop` → `main`. The Release workflow creates a GitHub Release with tag `v<version>`.
+5. **Deploy (main):** Railway auto-deploys `main` to production.
+6. **Hotfix:** Branch `hotfix/*` from `main`, fix, PR to both `main` and `develop`.
+
+### Versioning
+
+Semantic versioning (`major.minor.patch`) in `package.json`. Update before merging to `main`. The `ci` workflow runs for EVERY push/PR to catch issues early regardless of branch.
+
+### Database Persistence
+
+- SQLite file lives on a **Railway persistent volume** at `/data/app.db`
+- `DATABASE_URL=/data/app.db` (set as Railway env var)
+- The `seed-db.ts` script is idempotent — creates tables on first run, skips if data exists
+- **Deploys do not wipe user data** thanks to the persistent volume
+- The seed script runs in `start.sh` on every deploy (safe — skips if already seeded)
+
+### Recovery
+
+- **Rollback:** Redeploy a previous deployment from Railway dashboard
+- **Code revert:** `git revert` or use Railway's rollback
+- **DB backup:** Download via `railway volume files download /data/app.db ./backup.db`
 
 ## Directory Structure
 
