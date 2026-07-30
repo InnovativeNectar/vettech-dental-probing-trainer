@@ -68,6 +68,21 @@ export function AssessmentFlow({ assessment, userId, onComplete, onExit }: Asses
           timeSpentSeconds: totalSeconds,
         }),
       });
+
+      if (assessment.moduleId) {
+        await fetch('/api/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            moduleId: assessment.moduleId,
+            lessonId: null,
+            status: passed ? 'completed' : 'in_progress',
+            score,
+            timeSpentSeconds: totalSeconds,
+          }),
+        });
+      }
     } catch {
       // API unavailable — still show result locally
     }
