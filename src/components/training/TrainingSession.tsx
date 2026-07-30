@@ -28,20 +28,20 @@ export function TrainingSession({ moduleId }: TrainingSessionProps) {
   const [showProbe, setShowProbe] = useState(true);
   const [probeActive, setProbeActive] = useState(true);
 
-  const { readings, addReading, currentProbe } = useProbeStore();
-  const { depth, isInSulcus, currentTooth, currentLocation } = currentProbe;
+  const { readings, addReading } = useProbeStore();
 
   const handleToothClick = useCallback((toothNumber: number) => {
     setSelectedTooth((prev) => (prev === toothNumber ? null : toothNumber));
   }, []);
 
   const handleProbeReading = useCallback(() => {
-    if (isInSulcus && currentTooth !== null && currentLocation !== null) {
+    const probe = useProbeStore.getState().currentProbe;
+    if (probe.isInSulcus && probe.currentTooth !== null && probe.currentLocation !== null) {
       addReading({
         id: crypto.randomUUID(),
-        toothNumber: currentTooth,
-        sulcusLocation: currentLocation,
-        depthMm: depth,
+        toothNumber: probe.currentTooth,
+        sulcusLocation: probe.currentLocation,
+        depthMm: probe.depth,
         bleedingOnProbing: false,
         timestamp: new Date(),
       });
@@ -63,7 +63,7 @@ export function TrainingSession({ moduleId }: TrainingSessionProps) {
         // API unavailable — still record locally
       }
     }
-  }, [isInSulcus, currentTooth, currentLocation, depth, addReading, moduleId]);
+    }, [addReading, moduleId]);
 
   return (
     <div className="relative flex h-[calc(100vh-3.5rem)]">
@@ -86,14 +86,7 @@ export function TrainingSession({ moduleId }: TrainingSessionProps) {
         </Suspense>
       </div>
 
-      {/* Probe overlay */}
-      <ProbeOverlay
-        depth={depth}
-        isInSulcus={isInSulcus}
-        currentTooth={currentTooth}
-        currentLocation={currentLocation}
-        readingsCount={readings.length}
-      />
+      <ProbeOverlay />
 
       {/* Controls sidebar */}
       <TrainingControls

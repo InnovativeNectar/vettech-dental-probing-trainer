@@ -14,11 +14,17 @@ export function TouchControls({ onTakeReading }: TouchControlsProps) {
 
   const handleAction = (action: string) => {
     switch (action) {
-      case 'up':
+      case 'forward':
         setProbePosition([currentProbe.position[0], currentProbe.position[1], currentProbe.position[2] + 0.5]);
         break;
-      case 'down':
+      case 'back':
         setProbePosition([currentProbe.position[0], currentProbe.position[1], currentProbe.position[2] - 0.5]);
+        break;
+      case 'up':
+        setProbePosition([currentProbe.position[0], currentProbe.position[1] + 0.5, currentProbe.position[2]]);
+        break;
+      case 'down':
+        setProbePosition([currentProbe.position[0], currentProbe.position[1] - 0.5, currentProbe.position[2]]);
         break;
       case 'left':
         setProbePosition([currentProbe.position[0] - 0.5, currentProbe.position[1], currentProbe.position[2]]);
@@ -52,20 +58,22 @@ export function TouchControls({ onTakeReading }: TouchControlsProps) {
   };
 
   return (
-    <div className="absolute bottom-4 left-4 right-4 flex-none md:hidden" aria-label="Touch probe controls">
+    <div className="absolute bottom-4 left-4 right-4 z-10" aria-label="Touch probe controls">
       <div className="flex items-end justify-between gap-3">
-        {/* D-pad */}
+        {/* D-pad — horizontal */}
         <div className="grid grid-cols-3 gap-1">
           <div />
-          <button className={buttonClass('primary')} onTouchStart={() => handleAction('up')} onMouseDown={() => handleAction('up')}>▲</button>
+          <button className={buttonClass('primary')} onTouchStart={() => handleAction('forward')} onMouseDown={() => handleAction('forward')}>▲</button>
           <div />
           <button className={buttonClass('primary')} onTouchStart={() => handleAction('left')} onMouseDown={() => handleAction('left')}>◀</button>
-          <button className={buttonClass('secondary')} onTouchStart={() => handleAction('down')} onMouseDown={() => handleAction('down')}>▼</button>
+          <button className={buttonClass('secondary')} onTouchStart={() => handleAction('back')} onMouseDown={() => handleAction('back')}>▼</button>
           <button className={buttonClass('primary')} onTouchStart={() => handleAction('right')} onMouseDown={() => handleAction('right')}>▶</button>
         </div>
 
-        {/* Depth + Rotate column */}
+        {/* Vertical + Depth + Rotate */}
         <div className="flex flex-col gap-2">
+          <button className={buttonClass('primary')} onTouchStart={() => handleAction('up')} onMouseDown={() => handleAction('up')}>⬆</button>
+          <button className={buttonClass('primary')} onTouchStart={() => handleAction('down')} onMouseDown={() => handleAction('down')}>⬇</button>
           <button className={buttonClass('secondary')} onTouchStart={() => handleAction('withdraw')} onMouseDown={() => handleAction('withdraw')}>↕</button>
           <button className={buttonClass('secondary')} onTouchStart={() => handleAction('insert')} onMouseDown={() => handleAction('insert')}>↕↓</button>
           <button className={buttonClass('secondary')} onTouchStart={() => handleAction('rotateLeft')} onMouseDown={() => handleAction('rotateLeft')}>↺</button>

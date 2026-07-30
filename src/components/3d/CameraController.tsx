@@ -7,10 +7,13 @@ import * as THREE from 'three';
 
 interface CameraControllerProps {
   focusPoint?: [number, number, number];
-  enableProbeControl?: boolean;
+  probeActive?: boolean;
 }
 
-export function CameraController({ focusPoint, enableProbeControl = false }: CameraControllerProps) {
+export function CameraController({
+  focusPoint,
+  probeActive = false,
+}: CameraControllerProps) {
   const controlsRef = useRef<React.ComponentRef<typeof OrbitControls>>(null);
   const { camera } = useThree();
 
@@ -31,8 +34,9 @@ export function CameraController({ focusPoint, enableProbeControl = false }: Cam
         dampingFactor={0.1}
         minDistance={3}
         maxDistance={50}
-        enablePan={!enableProbeControl}
-        enableRotate={!enableProbeControl}
+        enablePan={!probeActive}
+        enableRotate={!probeActive}
+        enableZoom={!probeActive}
         maxPolarAngle={Math.PI * 0.85}
       />
     </>

@@ -7,6 +7,7 @@ import { canAccessAdmin } from '@/lib/admin/rbac';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
+  { href: '/admin/setup', label: 'Setup', icon: '🚀' },
   { href: '/admin/courses', label: 'Courses', icon: '📚' },
   { href: '/admin/users', label: 'Users', icon: '👥' },
   { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
