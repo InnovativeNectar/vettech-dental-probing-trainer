@@ -36,6 +36,43 @@ export default function DashboardPage() {
     );
   }
 
+  const hasData =
+    data !== null &&
+    (data.totalSessions > 0 || data.badgesEarned > 0 || data.streakDays > 0);
+
+  if (!hasData) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Welcome to VetTech Dental Prober</h1>
+            <p className="mt-1 text-gray-500">
+              Get started by exploring training modules or taking a practice session.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <Link href="/training" className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md">
+              <div className="text-3xl mb-3">📚</div>
+              <h3 className="text-lg font-semibold text-gray-900">Start Training</h3>
+              <p className="mt-1 text-sm text-gray-500">Begin with guided lessons on dental probing techniques.</p>
+            </Link>
+            <Link href="/cases" className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md">
+              <div className="text-3xl mb-3">🦷</div>
+              <h3 className="text-lg font-semibold text-gray-900">Explore Cases</h3>
+              <p className="mt-1 text-sm text-gray-500">Practice on clinical case studies with real pathology.</p>
+            </Link>
+            <Link href="/assessment" className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md">
+              <div className="text-3xl mb-3">📝</div>
+              <h3 className="text-lg font-semibold text-gray-900">Take an Assessment</h3>
+              <p className="mt-1 text-sm text-gray-500">Test your knowledge with timed quizzes and practical assessments.</p>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const totalXp = profile?.skillAreas.reduce((sum, sa) => sum + sa.xp, 0) ?? 0;
   const level = getLevelFromXp(totalXp);
 

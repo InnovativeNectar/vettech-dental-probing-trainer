@@ -1,12 +1,36 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const provider = searchParams.get('provider') || 'credentials';
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+const VALID_EMAILS = new Set([
+  'student@vettech.edu',
+  'instructor@pinnaclevet.edu',
+  'admin@vetacademy.edu',
+]);
 
-  return NextResponse.redirect(new URL(`/api/auth/${provider}?callbackUrl=${encodeURIComponent(callbackUrl)}`, request.url));
+function getUser(email: string) {
+  return {
+    id: 'user-001',
+    email,
+    name: email.split('@')[0],
+    role: email.includes('admin') ? 'admin' : email.includes('instructor') ? 'instructor' : 'student',
+    avatarUrl: null,
+    institution: 'Pinnacle Vet College',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+}
+
+export async function GET(request: NextRequest) {
+  const session = request.cookies.get('vettech_session');
+  if (!session?.value) {
+    return NextResponse.json({ user: null }, { status: 401 });
+  }
+  try {
+    const parsed = JSON.parse(session.value);
+    return NextResponse.json({ user: parsed.user, token: parsed.token });
+  } catch {
+    return NextResponse.json({ user: null }, { status: 401 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -18,23 +42,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    if (email === 'student@vettech.edu' || email === 'instructor@pinnaclevet.edu' || email === 'admin@vetacademy.edu') {
-      return NextResponse.json({
-        user: {
-          id: 'user-001',
-          email,
-          name: email.split('@')[0],
-          role: email.includes('admin') ? 'admin' : email.includes('instructor') ? 'instructor' : 'student',
-          avatarUrl: null,
-          institution: 'Pinnacle Vet College',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        token: `session-${Date.now()}`,
-      });
+    if (!VALID_EMAILS.has(email)) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    const user = getUser(email);
+    const token = `session-${Date.now()}`;
+    const sessionData = { user, token };
+
+    const response = NextResponse.json(sessionData);
+    response.cookies.set('vettech_session', JSON.stringify(sessionData), {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24,
+      path: '/',
+    });
+    return response;
   } catch {
     return NextResponse.json({ error: 'Authentication failed' }, { status: 500 });
   }

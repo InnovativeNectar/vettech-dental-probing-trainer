@@ -250,7 +250,7 @@ export function AssessmentFlow({ assessment, userId, onComplete, onExit }: Asses
         </DialogFooter>
       </Dialog>
 
-      <Dialog open={showTimeUp} onClose={() => {}}>
+      <Dialog open={showTimeUp} onClose={() => setShowTimeUp(false)}>
         <DialogHeader>
           <h2 className="text-lg font-semibold text-red-700">Time&apos;s up!</h2>
         </DialogHeader>
@@ -259,6 +259,9 @@ export function AssessmentFlow({ assessment, userId, onComplete, onExit }: Asses
             Your assessment has been submitted automatically.
           </p>
         </DialogContent>
+        <DialogFooter>
+          <Button onClick={() => setShowTimeUp(false)}>Dismiss</Button>
+        </DialogFooter>
       </Dialog>
     </div>
   );
