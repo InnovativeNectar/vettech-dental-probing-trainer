@@ -33,8 +33,8 @@ npm run typecheck    # Type check
 
 | Branch | Purpose | Deploys to |
 |--------|---------|------------|
-| `main` | Production-ready code | Railway production (via auto-deploy) |
-| `develop` | Integration branch for active dev | Railway production (via auto-deploy) |
+| `main` | Production-ready code | Railway production (via CI deploy job) |
+| `develop` | Integration branch for active dev | Railway staging (auto-deploy on push) |
 | `feature/*` | New features, branch off `develop` | Never |
 | `hotfix/*` | Urgent fixes, branch off `main` | Never |
 | `release/*` | Release candidates, branch off `develop`, merge to `main` | Never |
@@ -43,9 +43,9 @@ npm run typecheck    # Type check
 
 1. **Develop:** Branch `feature/*` from `develop`. PR back to `develop` when ready.
 2. **CI:** Every push/PR to `develop`/`main` runs `typecheck → lint → build → test`.
-3. **Deploy (develop):** Merges to `develop` auto-deploy to Railway production (preview).
+3. **Deploy (staging):** Push to `develop` → CI passes → Railway auto-deploys staging via GitHub integration.
 4. **Release:** Merge `develop` → `main`. The Release workflow creates a GitHub Release with tag `v<version>`.
-5. **Deploy (main):** Railway auto-deploys `main` to production.
+5. **Deploy (production):** CI passes on `main` → CI deploy job runs `railway up` for production.
 6. **Hotfix:** Branch `hotfix/*` from `main`, fix, PR to both `main` and `develop`.
 
 ### Versioning
