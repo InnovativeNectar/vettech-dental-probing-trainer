@@ -29,8 +29,9 @@ export function CaseAssessment({ caseData, onComplete }: CaseAssessmentProps) {
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const setCurrentAttempt = useCaseStore((s) => s.setCurrentAttempt);
+  const userId = 'user-001';
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const diagScore = scoreAnswer(diagnosis, caseData.diagnosis);
     const treatScore = scoreAnswer(treatmentPlan, caseData.treatmentPlan);
     const totalScore = Math.round(((diagScore + treatScore) / 2) * 100);
@@ -38,7 +39,7 @@ export function CaseAssessment({ caseData, onComplete }: CaseAssessmentProps) {
     const attempt: CaseAttempt = {
       id: crypto.randomUUID(),
       caseId: caseData.id,
-      userId: '',
+      userId,
       probeReadings: caseData.probeFindings,
       diagnosis,
       treatmentPlan,
@@ -49,6 +50,22 @@ export function CaseAssessment({ caseData, onComplete }: CaseAssessmentProps) {
     setScore(totalScore);
     setSubmitted(true);
     setCurrentAttempt(attempt);
+
+    try {
+      await fetch(`/api/cases/${caseData.id}/attempts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          diagnosis,
+          treatmentPlan,
+          score: totalScore,
+        }),
+      });
+    } catch {
+      // API unavailable — still show result locally
+    }
+
     onComplete(attempt);
   };
 

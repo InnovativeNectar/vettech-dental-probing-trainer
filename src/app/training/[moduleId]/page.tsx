@@ -7,6 +7,7 @@ import { PracticeMode } from '@/components/training';
 import { TRAINING_MODULES } from '@/lib/training-data';
 import { useState, useCallback, useMemo } from 'react';
 import { useUserStore } from '@/stores';
+import type { Species, AgeGroup } from '@/types';
 
 const SORTED_MODULES = [...TRAINING_MODULES].sort((a, b) => a.sortOrder - b.sortOrder);
 
@@ -16,6 +17,8 @@ export default function ModulePage() {
   const [mode, setMode] = useState<'lessons' | 'practice'>('lessons');
   const [lessonIdx, setLessonIdx] = useState(0);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
+  const [species, setSpecies] = useState<Species>('canine');
+  const [ageGroup, setAgeGroup] = useState<AgeGroup>('adult');
   const user = useUserStore((s) => s.user);
 
   const mod = TRAINING_MODULES.find((m) => m.id === moduleId);
@@ -188,10 +191,10 @@ export default function ModulePage() {
           />
         ) : mode === 'practice' ? (
           <PracticeMode
-            species="canine"
-            ageGroup="adult"
-            onSpeciesChange={() => {}}
-            onAgeGroupChange={() => {}}
+            species={species}
+            ageGroup={ageGroup}
+            onSpeciesChange={(s) => setSpecies(s)}
+            onAgeGroupChange={(a) => setAgeGroup(a)}
           />
         ) : null}
       </div>

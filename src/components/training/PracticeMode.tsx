@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useCallback, Suspense } from 'react';
+import { useState, useCallback, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useProbeStore } from '@/stores';
+import { useKeyboard } from '@/hooks/useKeyboard';
 import { ProbeOverlay } from './ProbeOverlay';
 import { ToothSelector } from './ToothSelector';
+import { TouchControls } from './TouchControls';
 import type { Species, AgeGroup } from '@/types';
 
 const Scene = dynamic(() => import('@/components/3d/Scene').then((m) => m.Scene), {
@@ -26,14 +28,65 @@ interface PracticeModeProps {
   onAgeGroupChange: (ageGroup: AgeGroup) => void;
 }
 
-export function PracticeMode({ species, ageGroup, onSpeciesChange, onAgeGroupChange }: PracticeModeProps) {
+export function PracticeMode({ species: speciesProp, ageGroup: ageGroupProp, onSpeciesChange, onAgeGroupChange }: PracticeModeProps) {
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
   const [highlightedTooth] = useState<number | null>(null);
   const [showProbe, setShowProbe] = useState(true);
   const [probeActive, setProbeActive] = useState(true);
+  const [species, setSpecies] = useState<Species>(speciesProp);
+  const [ageGroup, setAgeGroup] = useState<AgeGroup>(ageGroupProp);
+  const [tasks, setTasks] = useState<{ id: string; description: string; completed: boolean }[]>([]);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
-  const { readings, currentProbe } = useProbeStore();
+  const allReadings = useProbeStore((s) => s.readings);
+  const currentProbe = useProbeStore((s) => s.currentProbe);
   const { depth, isInSulcus, currentTooth, currentLocation } = currentProbe;
+  const setProbePosition = useProbeStore((s) => s.setProbePosition);
+  const setProbeDepth = useProbeStore((s) => s.setProbeDepth);
+  const setProbeRotation = useProbeStore((s) => s.setProbeRotation);
+
+  const handleTakeReading = useCallback(() => {
+    const state = useProbeStore.getState();
+    const probe = state.currentProbe;
+    if (probe.isInSulcus && probe.currentTooth !== null && probe.currentLocation !== null) {
+      state.addReading({
+        id: crypto.randomUUID(),
+        toothNumber: probe.currentTooth,
+        sulcusLocation: probe.currentLocation,
+        depthMm: probe.depth,
+        bleedingOnProbing: false,
+        timestamp: new Date(),
+      });
+    }
+  }, []);
+
+  useKeyboard([
+    { key: 'w', description: 'Move probe forward', action: () => setProbePosition([currentProbe.position[0], currentProbe.position[1], currentProbe.position[2] + 0.5]) },
+    { key: 's', description: 'Move probe back', action: () => setProbePosition([currentProbe.position[0], currentProbe.position[1], currentProbe.position[2] - 0.5]) },
+    { key: 'a', description: 'Move probe left', action: () => setProbePosition([currentProbe.position[0] - 0.5, currentProbe.position[1], currentProbe.position[2]]) },
+    { key: 'd', description: 'Move probe right', action: () => setProbePosition([currentProbe.position[0] + 0.5, currentProbe.position[1], currentProbe.position[2]]) },
+    { key: 'q', description: 'Withdraw probe', action: () => setProbeDepth(Math.max(0, currentProbe.depth - 0.5)) },
+    { key: 'e', description: 'Insert probe', action: () => setProbeDepth(currentProbe.depth + 0.5) },
+    { key: 'r', description: 'Rotate probe right', action: () => setProbeRotation([currentProbe.rotation[0], currentProbe.rotation[1] + 0.1, currentProbe.rotation[2]]) },
+    { key: 'f', description: 'Rotate probe left', action: () => setProbeRotation([currentProbe.rotation[0], currentProbe.rotation[1] - 0.1, currentProbe.rotation[2]]) },
+    { key: ' ', description: 'Take reading', action: handleTakeReading },
+  ]);
+
+  useEffect(() => {
+    if (tasks.length === 0 && selectedTooth !== null) {
+      setTasks([
+        { id: 't1', description: `Probing tooth #${selectedTooth} — measure sulcus depth`, completed: false },
+      ]);
+      setActiveTaskId('t1');
+    }
+  }, [selectedTooth, tasks.length]);
+
+  useEffect(() => {
+    if (isInSulcus && currentTooth !== null && activeTaskId !== null) {
+      setTasks((prev) => prev.map((t) => (t.id === activeTaskId ? { ...t, completed: true } : t)));
+      setActiveTaskId(null);
+    }
+  }, [isInSulcus, currentTooth, activeTaskId]);
 
   const handleToothClick = useCallback((toothNumber: number) => {
     setSelectedTooth((prev) => (prev === toothNumber ? null : toothNumber));
@@ -56,8 +109,13 @@ export function PracticeMode({ species, ageGroup, onSpeciesChange, onAgeGroupCha
             onToothClick={handleToothClick}
             showProbe={showProbe}
             probeActive={probeActive}
+            species={species}
+            ageGroup={ageGroup}
           />
         </Suspense>
+
+        {/* Touch controls overlay for mobile */}
+        <TouchControls onTakeReading={handleTakeReading} />
       </div>
 
       {/* Probe overlay */}
@@ -66,7 +124,7 @@ export function PracticeMode({ species, ageGroup, onSpeciesChange, onAgeGroupCha
         isInSulcus={isInSulcus}
         currentTooth={currentTooth}
         currentLocation={currentLocation}
-        readingsCount={readings.length}
+        readingsCount={allReadings.length}
       />
 
       {/* Controls panel */}
@@ -76,8 +134,8 @@ export function PracticeMode({ species, ageGroup, onSpeciesChange, onAgeGroupCha
           <ToothSelector
             selectedSpecies={species}
             selectedAgeGroup={ageGroup}
-            onSpeciesChange={onSpeciesChange}
-            onAgeGroupChange={onAgeGroupChange}
+            onSpeciesChange={(s) => { setSpecies(s); onSpeciesChange(s); }}
+            onAgeGroupChange={(a) => { setAgeGroup(a); onAgeGroupChange(a); }}
           />
         </div>
 
@@ -105,6 +163,34 @@ export function PracticeMode({ species, ageGroup, onSpeciesChange, onAgeGroupCha
               </label>
             </div>
           </div>
+
+          {/* Task list */}
+          {tasks.length > 0 && (
+            <div>
+              <h3 className="mb-2 text-sm font-medium text-gray-700">Current Task</h3>
+              <div className="space-y-2">
+                {tasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className={`flex items-start gap-2 rounded-lg border p-2 ${
+                      task.completed ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={task.completed}
+                      onChange={() => {}}
+                      className="mt-0.5 h-4 w-4 rounded border-gray-300"
+                      readOnly
+                    />
+                    <span className={`text-sm ${task.completed ? 'text-green-700 line-through' : 'text-gray-700'}`}>
+                      {task.description}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Selected tooth info */}
           {selectedTooth !== null && (
@@ -140,7 +226,7 @@ export function PracticeMode({ species, ageGroup, onSpeciesChange, onAgeGroupCha
 
         <div className="border-t border-gray-200 p-4">
           <div className="text-center text-sm text-gray-500">
-            {readings.length} readings taken
+            {allReadings.length} readings taken
           </div>
         </div>
       </div>

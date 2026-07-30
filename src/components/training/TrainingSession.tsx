@@ -45,8 +45,25 @@ export function TrainingSession({ moduleId }: TrainingSessionProps) {
         bleedingOnProbing: false,
         timestamp: new Date(),
       });
+
+      try {
+        fetch('/api/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: 'user-001',
+            moduleId: moduleId,
+            lessonId: null,
+            status: 'in_progress',
+            score: null,
+            timeSpentSeconds: 0,
+          }),
+        });
+      } catch {
+        // API unavailable — still record locally
+      }
     }
-  }, [isInSulcus, currentTooth, currentLocation, depth, addReading]);
+  }, [isInSulcus, currentTooth, currentLocation, depth, addReading, moduleId]);
 
   return (
     <div className="relative flex h-[calc(100vh-3.5rem)]">

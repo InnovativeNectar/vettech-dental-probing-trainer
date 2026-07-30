@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { User, UserProfile, Badge } from '@/types';
+import type { User, UserProfile, Badge, SkillArea } from '@/types';
 
 const DEMO_USER: User = {
   id: 'user-001',
@@ -55,6 +55,62 @@ const DEMO_PROFILE: UserProfile = {
   ],
 };
 
+/**
+ * Parse the JSON returned by /api/users/[id]/profile into a UserProfile.
+ * Drizzle's `timestamp` mode serializes as ISO strings over the wire (next
+ * Response.json), so we coerce strings back to Date. Returns null on a
+ * malformed payload so the caller can fall back to demo data.
+ */
+function mapProfileResponse(data: Record<string, unknown>): UserProfile | null {
+  if (!data || typeof data.id !== 'string') return null;
+  const role = data.role;
+  if (role !== 'student' && role !== 'instructor' && role !== 'admin') return null;
+
+  const toDate = (v: unknown): Date => {
+    if (v instanceof Date) return v;
+    if (typeof v === 'string' || typeof v === 'number') {
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? new Date(0) : d;
+    }
+    return new Date(0);
+  };
+
+  const user: User = {
+    id: data.id,
+    email: String(data.email ?? ''),
+    name: String(data.name ?? ''),
+    role,
+    avatarUrl: typeof data.avatarUrl === 'string' ? data.avatarUrl : undefined,
+    institution: typeof data.institution === 'string' ? data.institution : undefined,
+    createdAt: toDate(data.createdAt),
+    updatedAt: toDate(data.updatedAt),
+  };
+
+  const rawBadges = Array.isArray(data.badges) ? data.badges : [];
+  const badgesList: Badge[] = rawBadges.map((b) => ({
+    id: String(b.id ?? ''),
+    name: String(b.name ?? ''),
+    description: String(b.description ?? ''),
+    iconUrl: typeof b.iconUrl === 'string' ? b.iconUrl : '',
+    earnedAt: toDate(b.earnedAt),
+  }));
+
+  const rawSkills = Array.isArray(data.skillAreas) ? data.skillAreas : [];
+  const skillAreasList: SkillArea[] = rawSkills.map((s) => ({
+    name: String(s.name ?? ''),
+    level: Number(s.level ?? 1),
+    xp: Number(s.xp ?? 0),
+    maxXp: Number(s.maxXp ?? 100),
+  }));
+
+  const totalPoints =
+    typeof data.totalPoints === 'number'
+      ? data.totalPoints
+      : skillAreasList.reduce((sum, sa) => sum + sa.xp, 0);
+
+  return { ...user, totalPoints, badges: badgesList, skillAreas: skillAreasList };
+}
+
 interface UserState {
   user: User | null;
   profile: UserProfile | null;
@@ -103,25 +159,24 @@ export const useUserStore = create<UserState>((set) => ({
   },
   fetchUser: async (userId) => {
     set({ isLoading: true });
+    const id = userId || 'user-001';
     try {
-      const id = userId || 'user-001';
-      const res = await fetch(`/api/users/${id}`);
+      const res = await fetch(`/api/users/${id}/profile`);
       if (res.ok) {
         const data: Record<string, unknown> = await res.json();
-        const user: User = {
-          id: data.id as string,
-          email: data.email as string,
-          name: data.name as string,
-          role: data.role as User['role'],
-          institution: data.institution as string | undefined,
-          createdAt: new Date((data.created_at as number) * 1000),
-          updatedAt: new Date((data.updated_at as number) * 1000),
-        };
-        set({ user, isAuthenticated: true, isLoading: false });
-        return;
+        const profile = mapProfileResponse(data);
+        if (profile) {
+          // UserProfile extends User, so the profile doubles as the user record.
+          const { totalPoints, badges, skillAreas, ...user } = profile;
+          void totalPoints;
+          void badges;
+          void skillAreas;
+          set({ user, profile, isAuthenticated: true, isLoading: false });
+          return;
+        }
       }
     } catch {
-      // API unavailable — fall back to demo
+      // API unavailable — fall back to demo below
     }
     set({ user: DEMO_USER, profile: DEMO_PROFILE, isAuthenticated: true, isLoading: false });
   },

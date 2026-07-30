@@ -10,11 +10,12 @@ import { QuestionRenderer } from './QuestionRenderer';
 
 interface AssessmentFlowProps {
   assessment: Assessment;
+  userId: string;
   onComplete: (result: AssessmentResult) => void;
   onExit: () => void;
 }
 
-export function AssessmentFlow({ assessment, onComplete, onExit }: AssessmentFlowProps) {
+export function AssessmentFlow({ assessment, userId, onComplete, onExit }: AssessmentFlowProps) {
   const {
     currentQuestionIndex,
     answers,
@@ -32,7 +33,7 @@ export function AssessmentFlow({ assessment, onComplete, onExit }: AssessmentFlo
   const [showTimeUp, setShowTimeUp] = useState(false);
   const timeUpRef = useRef(false);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     const gradedAnswers = assessment.questions.map((question) => {
       const answer = answers.find((a) => a.questionId === question.id);
       const result = gradeAnswer(question.id, answer?.userAnswer ?? '', assessment);
@@ -48,9 +49,47 @@ export function AssessmentFlow({ assessment, onComplete, onExit }: AssessmentFlo
     const attempt = createAttempt(assessment, gradedAnswers, totalSeconds);
     const feedback = generateFeedback(assessment, gradedAnswers);
 
+    const score = Math.round(
+      (gradedAnswers.reduce((sum, a) => sum + a.pointsEarned, 0) /
+        gradedAnswers.length) *
+        100
+    );
+    const passed = score >= 70;
+
+    try {
+      await fetch(`/api/assessments/${assessment.id}/attempts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          score,
+          passed,
+          answers: gradedAnswers,
+          timeSpentSeconds: totalSeconds,
+        }),
+      });
+
+      if (assessment.moduleId) {
+        await fetch('/api/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            moduleId: assessment.moduleId,
+            lessonId: null,
+            status: passed ? 'completed' : 'in_progress',
+            score,
+            timeSpentSeconds: totalSeconds,
+          }),
+        });
+      }
+    } catch {
+      // API unavailable — still show result locally
+    }
+
     resetAssessment();
     onComplete({ attempt, assessment, feedback });
-  }, [assessment, answers, timeRemaining, resetAssessment, onComplete]);
+  }, [assessment, answers, timeRemaining, resetAssessment, onComplete, userId]);
 
   useEffect(() => {
     if (isAssessmentActive) return;
@@ -211,7 +250,7 @@ export function AssessmentFlow({ assessment, onComplete, onExit }: AssessmentFlo
         </DialogFooter>
       </Dialog>
 
-      <Dialog open={showTimeUp} onClose={() => {}}>
+      <Dialog open={showTimeUp} onClose={() => setShowTimeUp(false)}>
         <DialogHeader>
           <h2 className="text-lg font-semibold text-red-700">Time&apos;s up!</h2>
         </DialogHeader>
@@ -220,6 +259,9 @@ export function AssessmentFlow({ assessment, onComplete, onExit }: AssessmentFlo
             Your assessment has been submitted automatically.
           </p>
         </DialogContent>
+        <DialogFooter>
+          <Button onClick={() => setShowTimeUp(false)}>Dismiss</Button>
+        </DialogFooter>
       </Dialog>
     </div>
   );

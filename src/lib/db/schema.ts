@@ -167,3 +167,13 @@ export const skillAreas = sqliteTable('skill_areas', {
   xp: integer('xp').notNull().default(0),
   maxXp: integer('max_xp').notNull().default(100),
 });
+
+export const sessions = sqliteTable('sessions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  token: text('token').notNull().unique(),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+});

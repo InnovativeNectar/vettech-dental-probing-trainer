@@ -6,7 +6,8 @@ import { CameraController } from './CameraController';
 import { JawArch } from './JawArch';
 import { Probe } from './Probe';
 import { useProbeStore } from '@/stores';
-import { ADULT_DOG_TEETH } from '@/lib/dental-data';
+import { getTeethForSpecies } from '@/lib/dental-data';
+import type { Species, AgeGroup } from '@/types';
 
 interface SceneProps {
   selectedTooth: number | null;
@@ -14,11 +15,14 @@ interface SceneProps {
   onToothClick?: (toothNumber: number) => void;
   showProbe?: boolean;
   probeActive?: boolean;
+  species?: Species;
+  ageGroup?: AgeGroup;
 }
 
-export function Scene({ selectedTooth, highlightedTooth, onToothClick, showProbe = true, probeActive = true }: SceneProps) {
+export function Scene({ selectedTooth, highlightedTooth, onToothClick, showProbe = true, probeActive = true, species = 'canine', ageGroup = 'adult' }: SceneProps) {
   const { currentProbe, maxDepthReached } = useProbeStore();
   const { position, rotation, depth, isInSulcus } = currentProbe;
+  const teeth = getTeethForSpecies(species, ageGroup);
 
   return (
     <Canvas
@@ -33,7 +37,7 @@ export function Scene({ selectedTooth, highlightedTooth, onToothClick, showProbe
         enableProbeControl={probeActive}
       />
       <JawArch
-        teeth={ADULT_DOG_TEETH}
+        teeth={teeth}
         selectedTooth={selectedTooth}
         highlightedTooth={highlightedTooth}
         onToothClick={onToothClick}
