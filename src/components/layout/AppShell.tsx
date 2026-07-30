@@ -6,10 +6,13 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 
 const HIDDEN_SIDEBAR_ROUTES = new Set(['/', '/login']);
+const COLLAPSED_SIDEBAR_PREFIXES = ['/training/', '/cases/', '/assessment/'];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    COLLAPSED_SIDEBAR_PREFIXES.some((prefix) => pathname.startsWith(prefix)),
+  );
   const hideSidebar = HIDDEN_SIDEBAR_ROUTES.has(pathname);
 
   if (hideSidebar) {
