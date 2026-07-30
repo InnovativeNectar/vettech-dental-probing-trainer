@@ -65,22 +65,25 @@ export function Probe({
 
   const forceRingScale = Math.min(1 + resistanceForce * 0.02, 1.5);
 
+  // Tip is at local origin (0,0,0); handle/shaft extend upward (+Y).
+  // The probe group's position therefore represents the TIP world position,
+  // which matches probePosition used by physics + recording.
   return (
     <group ref={groupRef} position={position} rotation={rotation}>
       <group ref={handleRef}>
-        <mesh position={[0, 2, 0]} castShadow>
+        <mesh position={[0, 4, 0]} castShadow>
           <cylinderGeometry args={[0.08, 0.1, 3, 16]} />
           <meshStandardMaterial color="#2a2a2a" roughness={0.6} metalness={0.3} />
         </mesh>
       </group>
       <group ref={shaftRef}>
-        <mesh position={[0, -0.5, 0]} castShadow>
+        <mesh position={[0, 1.5, 0]} castShadow>
           <cylinderGeometry args={[0.03, 0.03, 3, 8]} />
           <meshStandardMaterial color="#c0c0c0" roughness={0.2} metalness={0.8} />
         </mesh>
       </group>
       <group ref={tipRef}>
-        <mesh position={[0, -2, 0]} castShadow>
+        <mesh position={[0, 0, 0]} castShadow>
           <cylinderGeometry args={[0.005, 0.015, 0.5, 8]} />
           <meshStandardMaterial
             color={depthColor}
@@ -92,7 +95,7 @@ export function Probe({
         </mesh>
       </group>
       {showForceFeedback && (
-        <mesh position={[0, -2.25, 0]}>
+        <mesh position={[0, -0.25, 0]}>
           <torusGeometry args={[0.04 * forceRingScale, 0.003, 8, 24]} />
           <meshStandardMaterial
             color={depthColor}
@@ -103,9 +106,8 @@ export function Probe({
           />
         </mesh>
       )}
-      {/* Measurement markings */}
       {[1, 2, 3, 4, 5].map((mm) => (
-        <mesh key={mm} position={[0.04, -0.5 - mm * 0.2, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <mesh key={mm} position={[0.04, 1.5 - mm * 0.2, 0]} rotation={[0, 0, Math.PI / 2]}>
           <boxGeometry args={[0.005, 0.01, 0.005]} />
           <meshStandardMaterial color={mm <= 3 ? '#4ade80' : mm <= 5 ? '#fbbf24' : '#ef4444'} />
         </mesh>
